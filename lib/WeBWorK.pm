@@ -265,9 +265,30 @@ sub dispatch($) {
 	#} else {
 	#	$proctor_authen_module = $ce->{authen}{proctor_module};
 	#}
-	
-	my $user_authen_module = WeBWorK::Authen::class($ce, "user_module");
-	
+	my $user_authen_module;
+	# TODO need to check for existence of necessary params such as context_label
+	if ($r->param("lti_message_type"))
+	{
+		debug("LTI Detected\n");
+		if ($displayArgs{courseID})
+		{
+			debug("CourseID found, trying authentication\n");
+			$user_authen_module = WeBWorK::Authen::class($ce, "lti");
+		}
+		else
+		{
+			debug("Redirecting to get a courseID\n$args");
+			my $courseName = $r->param("context_label");
+			#use CGI;
+			#my $q = CGI->new();
+			#print $q->redirect("$uri" . "$courseName/?" . $args);
+		}
+	}
+	else
+	{
+		$user_authen_module = WeBWorK::Authen::class($ce, "user_module");
+	}
+
 	runtime_use $user_authen_module;
 	my $authen = $user_authen_module->new($r);
 	debug("Using user_authen_module $user_authen_module: $authen\n");

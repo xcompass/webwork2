@@ -1,0 +1,5 @@
+*.swp
+*.log
+httpd2.pid
+httpd.pid
+.svn/
