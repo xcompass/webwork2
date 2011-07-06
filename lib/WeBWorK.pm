@@ -265,27 +265,64 @@ sub dispatch($) {
 	#} else {
 	#	$proctor_authen_module = $ce->{authen}{proctor_module};
 	#}
+
+
+	# In order to simplify, we use the Webwork root URL for all LTI actions,
+	# e.g.: http://137.82.12.77/webworkdev/
+	# Cases to handle:
+	# * The course does not yet exist
+	# ** If user is instructor, ask if want to create course
+	# ** If user is student, inform that course does not exist
+	# * The course exists
+	# ** SSO login
 	my $user_authen_module;
-	# TODO need to check for existence of necessary params such as context_label
-	if ($r->param("lti_message_type"))
+	if ($r->param("lti_message_type") &&
+		$r->param("context_label"))
 	{
-		debug("LTI Detected\n");
-		if ($displayArgs{courseID})
-		{
-			debug("CourseID found, trying authentication\n");
-			$user_authen_module = WeBWorK::Authen::class($ce, "lti");
+		debug("LTI detected\n");
+		# Check for course existence
+		my $tmpce = WeBWorK::CourseEnvironment->new({
+				%WeBWorK::SeedCE,
+				courseName => $r->param("context_label")
+			});
+		if (-e $ce->{courseDirs}->{root})
+		{ # course exists
+			if ($displayArgs{courseID})
+			{
+				debug("CourseID found, trying authentication\n");
+				$user_authen_module = WeBWorK::Authen::class($ce, "lti");
+			}
+			else
+			{
+				debug("CourseID not found, trying workaround\n");
+				# workaround is basically dump all our POST parameters into
+				# GET and redirect to that url. This should work as long as
+				# our url doesn't exceed 2000 characters.
+				use URI::Escape;
+				my @tmp;
+				foreach my $key ($r->param) {
+					my $val = $r->param($key);
+					push(@tmp, "$key=" . uri_escape($val)); 	
+				}
+				$args .= join('&', @tmp);
+
+				use CGI;
+				my $q = CGI->new();
+				debug("$uri" . $r->param("context_label") . "/?". $args);
+				print $q->redirect("$uri" . $r->param("context_label") . "/?" . $args);
+			}
 		}
 		else
-		{
-			debug("Redirecting to get a courseID\n$args");
-			my $courseName = $r->param("context_label");
-			#use CGI;
-			#my $q = CGI->new();
-			#print $q->redirect("$uri" . "$courseName/?" . $args);
+		{ # course does not exist
+			$displayModule = "WeBWorK::ContentGenerator::LTI";	
 		}
 	}
 	else
 	{
+		if($r->param("lti_message_type"))
+		{
+			debug("LTI detected but unable to proceed, missing parameter 'context_label'.\n");
+		}
 		$user_authen_module = WeBWorK::Authen::class($ce, "user_module");
 	}
 

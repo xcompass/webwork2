@@ -133,7 +133,7 @@ sub authenticate {
 
 	my $request = Net::OAuth->request("request token")->from_hash(
 		\%hash_params,
-		request_url => $ce->{server_root_url} . $r->uri,
+		request_url => $ce->{server_root_url} . $ce->{webwork_url} . "/",
 		request_method => 'POST',
 		consumer_secret => 'secret', # TODO read this from global.conf
 		protocol_version => Net::OAuth::PROTOCOL_VERSION_1_0A,
