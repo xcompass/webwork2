@@ -135,7 +135,7 @@ sub authenticate {
 		\%hash_params,
 		request_url => $ce->{server_root_url} . $ce->{webwork_url} . "/",
 		request_method => 'POST',
-		consumer_secret => 'secret', # TODO read this from global.conf
+		consumer_secret => $ce->{bridge}{lti_secret},
 		protocol_version => Net::OAuth::PROTOCOL_VERSION_1_0A,
 	);
 	if (!$request->verify())

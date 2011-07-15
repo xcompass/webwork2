@@ -135,7 +135,11 @@ sub createCourse
 	my @students = ();
 
 	my $parser = WebworkBridge::Bridges::LTIParser->new(\%course, \@students);
-	$parser->parse($xml);
+	my $ret = $parser->parse($xml);
+	if ($ret)
+	{
+		return error("XML response received, but access denied.", "#e005");
+	}
 	$course{name} = $self->sanitizeCourseName($r->param("context_label"));
 	$course{title} = $r->param("resource_link_title");
 	$course{id} = $r->param("resource_link_id");
@@ -160,7 +164,11 @@ sub updateCourse
 	my @students = ();
 
 	my $parser = WebworkBridge::Bridges::LTIParser->new(\%course, \@students);
-	$parser->parse($xml);
+	my $ret = $parser->parse($xml);
+	if ($ret)
+	{
+		return error("XML response received, but access denied.", "#e005");
+	}
 	$course{name} = $self->sanitizeCourseName($r->param("context_label"));
 	$course{title} = $r->param("resource_link_title");
 	$course{id} = $r->param("resource_link_id");
@@ -176,9 +184,10 @@ sub _getRoster
 	my $r = $self->{r};
 
 	my $ua = LWP::UserAgent->new;
+	debug("##### LTI Secret: " . $r->ce->{bridge}{lti_secret});
 	my $request = Net::OAuth->request("request token")->new(
-		consumer_key => 'secret',
-		consumer_secret => 'secret',
+		consumer_key => $r->param('oauth_consumer_key'),
+		consumer_secret => $r->ce->{bridge}{lti_secret},
 		protocol_version => Net::OAuth::PROTOCOL_VERSION_1_0A,
 		request_url => $r->param('ext_ims_lis_memberships_url'),
 		request_method => 'POST',
