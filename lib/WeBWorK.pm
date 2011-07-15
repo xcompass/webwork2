@@ -54,6 +54,8 @@ use WeBWorK::Upload;
 use WeBWorK::URLPath;
 use WeBWorK::Utils qw(runtime_use writeTimingLogEntry);
 
+use WebworkBridge::BridgeManager;
+
 use mod_perl;
 use constant MP2 => ( exists $ENV{MOD_PERL_API_VERSION} and $ENV{MOD_PERL_API_VERSION} >= 2 );
 
@@ -265,64 +267,22 @@ sub dispatch($) {
 	#} else {
 	#	$proctor_authen_module = $ce->{authen}{proctor_module};
 	#}
-
-
-	# In order to simplify, we use the Webwork root URL for all LTI actions,
-	# e.g.: http://137.82.12.77/webworkdev/
-	# Cases to handle:
-	# * The course does not yet exist
-	# ** If user is instructor, ask if want to create course
-	# ** If user is student, inform that course does not exist
-	# * The course exists
-	# ** SSO login
+	
 	my $user_authen_module;
-	if ($r->param("lti_message_type") &&
-		$r->param("context_label"))
-	{
-		debug("LTI detected\n");
-		# Check for course existence
-		my $tmpce = WeBWorK::CourseEnvironment->new({
-				%WeBWorK::SeedCE,
-				courseName => $r->param("context_label")
-			});
-		if (-e $ce->{courseDirs}->{root})
-		{ # course exists
-			if ($displayArgs{courseID})
-			{
-				debug("CourseID found, trying authentication\n");
-				$user_authen_module = WeBWorK::Authen::class($ce, "lti");
-			}
-			else
-			{
-				debug("CourseID not found, trying workaround\n");
-				# workaround is basically dump all our POST parameters into
-				# GET and redirect to that url. This should work as long as
-				# our url doesn't exceed 2000 characters.
-				use URI::Escape;
-				my @tmp;
-				foreach my $key ($r->param) {
-					my $val = $r->param($key);
-					push(@tmp, "$key=" . uri_escape($val)); 	
-				}
-				$args .= join('&', @tmp);
 
-				use CGI;
-				my $q = CGI->new();
-				debug("$uri" . $r->param("context_label") . "/?". $args);
-				print $q->redirect("$uri" . $r->param("context_label") . "/?" . $args);
-			}
-		}
-		else
-		{ # course does not exist
-			$displayModule = "WeBWorK::ContentGenerator::LTI";	
-		}
-	}
-	else
+	my $bridge = WebworkBridge::BridgeManager->new($r);
+	$bridge->run();
+	if ($bridge->useAuthenModule())
 	{
-		if($r->param("lti_message_type"))
-		{
-			debug("LTI detected but unable to proceed, missing parameter 'context_label'.\n");
-		}
+		$user_authen_module = $bridge->getAuthenModule();
+	}
+	if ($bridge->useDisplayModule())
+	{
+		$displayModule = $bridge->getDisplayModule();
+	}
+
+	if (!defined($user_authen_module))
+	{
 		$user_authen_module = WeBWorK::Authen::class($ce, "user_module");
 	}
 
