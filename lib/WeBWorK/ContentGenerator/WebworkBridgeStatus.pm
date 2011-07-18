@@ -14,7 +14,7 @@
 # Artistic License for more details.
 ################################################################################
 
-package WeBWorK::ContentGenerator::LTIImport;
+package WeBWorK::ContentGenerator::WebworkBridgeStatus;
 use base qw(WeBWorK::ContentGenerator);
 
 =head1 NAME
@@ -39,54 +39,22 @@ sub body {
 	my $r = $self->r;
 	my $ce = $r->ce;
 
-	# TODO wtf does this thing do?
-	my $ltiimport_error = MP2 ? $r->notes->get("ltiimport_error") : $r->notes("ltiimport_error");
+	# check for error messages to display
+	my $import_error = MP2 ? $r->notes->get("import_error") : $r->notes("import_error");
 
-	debug("LTI Role: " . $r->param('roles'));
+	print CGI::h2("Course Import");
+	print CGI::p("This course does not yet exist in Webworks, so we tried to import it.");
 
-	if ($r->param('roles') =~ /instructor/i)
+	if ($import_error)
 	{
-		print CGI::p("This course does not yet exist in Webworks, importing...");
-		print CGI::p("Reticulating splines...");
+		print CGI::h4("Course Import Failed");
+		print CGI::p("Unfortunately, import failed. This might be a temporary condition. If it persists, please mail an error report with the time that the error occured and the exact error message below:");
+		print CGI::div({class=>"ResultsWithError"}, CGI::pre("$import_error") );
 	}
 	else
 	{
-		print CGI::p("This course does not yet exist in Webworks, please wait for your instructor to create it.");
-	}
-
-	use Net::OAuth;
-	use HTTP::Request::Common;
-	use LWP::UserAgent;
-	
-	my $ua = LWP::UserAgent->new;
-	my $request = Net::OAuth->request("request token")->new(
-		consumer_key => 'secret',
-		consumer_secret => 'secret',
-		protocol_version => Net::OAuth::PROTOCOL_VERSION_1_0A,
-		request_url => $r->param('ext_ims_lis_memberships_url'),
-		request_method => 'POST',
-		signature_method => 'HMAC-SHA1',
-		timestamp => time(),
-		nonce => rand(),
-		callback => 'about:blank',
-		extra_params => {
-			lti_version => 'LTI-1p0',
-			lti_message_type => 'basic-lis-readmembershipsforcontext',
-			id => $r->param('lis_result_sourcedid'),
-		}
-	);
-
-	$request->sign;
-	my $res = $ua->request(POST $request->to_url);
-	if ($res->is_success) 
-	{
-		debug("LTI Get Roster Success! \n" . $res->content . "\n");	
-		print CGI::p("Get Roster Success!");
-	}
-	else
-	{
-		debug("LTI Get Roster Failed... :'( \n");
-		print CGI::p("Get Roster Failed :'(");
+		print CGI::h2("Course Import Successful");
+		print CGI::p("The course was successfully imported into Webwork. Please refresh to login to your course.");
 	}
 
 	return "";

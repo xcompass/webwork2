@@ -70,7 +70,7 @@ sub run
 			{
 				debug("CourseID found, trying authentication\n");
 				$self->{useAuthenModule} = 1;
-				$self->updateCourse();
+				return $self->updateCourse();
 			}
 			else
 			{
@@ -97,7 +97,7 @@ sub run
 		{ # course does not exist
 			debug("Course does not exist, try LTI import.");
 			$self->{useDisplayModule} = 1;
-			$self->createCourse();
+			return $self->createCourse();
 		}
 	}
 	else
@@ -114,11 +114,12 @@ sub getAuthenModule
 	return WeBWorK::Authen::class($r->ce, "lti");
 }
 
-sub getDisplayModule
-{
-	my $self = shift;
-	return "WeBWorK::ContentGenerator::LTIImport";
-}
+# Uncomment if needed to override the default display module
+#sub getDisplayModule
+#{
+#	my $self = shift;
+#	return "WeBWorK::ContentGenerator::LTIImport";
+#}
 
 sub createCourse
 {
@@ -126,9 +127,9 @@ sub createCourse
 	my $r = $self->{r};
 	
 	my $xml = $self->_getRoster();
-	if ($xml == 0)
+	if (!$xml)
 	{
-		return error("Unable to get class roster.", "#e003");
+		return error("Unable to get class roster creating course.", "#e006");
 	}
 
 	my %course = ();
@@ -157,7 +158,7 @@ sub updateCourse
 	my $xml = $self->_getRoster();
 	if (!$xml)
 	{
-		return error("Unable to get class roster.", "#e003");
+		return error("Unable to get class roster updating course.", "#e003");
 	}
 
 	my %course = ();
@@ -209,13 +210,12 @@ sub _getRoster
 	{
 		$xml = $res->content;
 		debug("LTI Get Roster Success! \n" . $xml . "\n");	
+		return $xml;
 	}
 	else
 	{
 		return 0;
 	}
-
-	return $xml;
 }
 
 1;

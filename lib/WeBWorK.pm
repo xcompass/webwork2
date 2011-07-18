@@ -271,13 +271,17 @@ sub dispatch($) {
 	my $user_authen_module;
 
 	my $bridge = WebworkBridge::BridgeManager->new($r);
-	$bridge->run();
+	my $retstatus = $bridge->run();
 	if ($bridge->useAuthenModule())
 	{
 		$user_authen_module = $bridge->getAuthenModule();
 	}
 	if ($bridge->useDisplayModule())
 	{
+		if ($retstatus)
+		{
+			MP2 ? $r->notes->set(import_error => $retstatus) : $r->notes('import_error' => $retstatus);
+		}
 		$displayModule = $bridge->getDisplayModule();
 	}
 

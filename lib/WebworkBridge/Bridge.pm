@@ -54,7 +54,7 @@ sub useAuthenModule
 sub getDisplayModule
 {
 	my $self = shift;
-	die "Not implemented";
+	return "WeBWorK::ContentGenerator::WebworkBridgeStatus";
 }
 
 sub getAuthenModule
