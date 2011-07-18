@@ -126,17 +126,19 @@ sub createCourse
 	my $self = shift;
 	my $r = $self->{r};
 	
-	my $xml = $self->_getRoster();
-	if (!$xml)
+	my $xml;
+	my $ret = $self->_getRoster(\$xml);
+	if ($ret)
 	{
-		return error("Unable to get class roster creating course.", "#e006");
+		return error("Unable to get class roster updating course: $ret", "#e003");
 	}
+
 
 	my %course = ();
 	my @students = ();
 
 	my $parser = WebworkBridge::Bridges::LTIParser->new(\%course, \@students);
-	my $ret = $parser->parse($xml);
+	$ret = $parser->parse($xml);
 	if ($ret)
 	{
 		return error("XML response received, but access denied.", "#e005");
@@ -155,17 +157,18 @@ sub updateCourse
 	my $self = shift;
 	my $r = $self->{r};
 	
-	my $xml = $self->_getRoster();
-	if (!$xml)
+	my $xml;
+	my $ret = $self->_getRoster(\$xml);
+	if ($ret)
 	{
-		return error("Unable to get class roster updating course.", "#e003");
+		return error("Unable to get class roster updating course: $ret", "#e003");
 	}
 
 	my %course = ();
 	my @students = ();
 
 	my $parser = WebworkBridge::Bridges::LTIParser->new(\%course, \@students);
-	my $ret = $parser->parse($xml);
+	$ret = $parser->parse($xml);
 	if ($ret)
 	{
 		return error("XML response received, but access denied.", "#e005");
@@ -181,14 +184,19 @@ sub updateCourse
 
 sub _getRoster
 {
-	my $self = shift;
+	my ($self, $xml) = @_;
 	my $r = $self->{r};
 
 	my $ua = LWP::UserAgent->new;
-	debug("##### LTI Secret: " . $r->ce->{bridge}{lti_secret});
+	my $key = $r->param('oauth_consumer_key');
+	if (!defined($r->ce->{bridge}{$key}))
+	{
+		return error("Unknown secret key '$key', is there a typo?", "#e006");
+	}
+	debug("##### LTI Secret: " . $r->ce->{bridge}{$key});
 	my $request = Net::OAuth->request("request token")->new(
-		consumer_key => $r->param('oauth_consumer_key'),
-		consumer_secret => $r->ce->{bridge}{lti_secret},
+		consumer_key => $key,
+		consumer_secret => $r->ce->{bridge}{$key},
 		protocol_version => Net::OAuth::PROTOCOL_VERSION_1_0A,
 		request_url => $r->param('ext_ims_lis_memberships_url'),
 		request_method => 'POST',
@@ -205,16 +213,15 @@ sub _getRoster
 
 	$request->sign;
 	my $res = $ua->request(POST $request->to_url);
-	my $xml;
 	if ($res->is_success) 
 	{
-		$xml = $res->content;
-		debug("LTI Get Roster Success! \n" . $xml . "\n");	
-		return $xml;
+		$$xml = $res->content;
+		debug("LTI Get Roster Success! \n" . $$xml . "\n");	
+		return 0;
 	}
 	else
 	{
-		return 0;
+		return error("Unable to perform OAuth request.","#e007");
 	}
 }
 

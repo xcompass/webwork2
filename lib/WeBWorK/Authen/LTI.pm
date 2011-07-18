@@ -130,12 +130,18 @@ sub authenticate {
 		my $vals = $r->param($key);
 		$hash_params{$key} = $vals;
 	}
-
+	my $key = $r->param('oauth_consumer_key');
+	if (!defined($r->ce->{bridge}{$key}))
+	{
+		$self->{log_error} = "Unable to find a secret key that matches '$key'.";
+		$self->{error} = "Unable to find a secret key that matches '$key'.";
+		return 0;
+	}
 	my $request = Net::OAuth->request("request token")->from_hash(
 		\%hash_params,
 		request_url => $ce->{server_root_url} . $ce->{webwork_url} . "/",
 		request_method => 'POST',
-		consumer_secret => $ce->{bridge}{lti_secret},
+		consumer_secret => $ce->{bridge}{$key},
 		protocol_version => Net::OAuth::PROTOCOL_VERSION_1_0A,
 	);
 	if (!$request->verify())
