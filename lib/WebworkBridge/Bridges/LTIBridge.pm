@@ -129,6 +129,11 @@ sub createCourse
 	my %course = ();
 	my @students = ();
 
+	if (!$self->_isInstructor())
+	{
+		return error("Please ask your instructor to import this course into Webworks first.", "#e011");
+	}
+
 	my $ret = $self->_getAndParseRoster(\%course, \@students);
 	if ($ret)
 	{
@@ -160,6 +165,18 @@ sub updateCourse
 	if ($ret)
 	{
 		return error("Update course failed: $ret", "#e010");
+	}
+	return 0;
+}
+
+sub _isInstructor
+{
+	my $self = shift;
+	my $r = $self->{r};
+
+	if ($r->param('roles') =~ /instructor/i)
+	{
+		return 1;
 	}
 	return 0;
 }
