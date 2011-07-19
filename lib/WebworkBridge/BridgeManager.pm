@@ -30,7 +30,8 @@ sub run
 	debug("Importer running.");
 
 	my @bridges = (
-		"WebworkBridge::Bridges::LTIBridge"
+		"WebworkBridge::Bridges::LTIBridge",
+		"WebworkBridge::Bridges::VistaBridge"
 	);
 
 	# find a compatible bridge

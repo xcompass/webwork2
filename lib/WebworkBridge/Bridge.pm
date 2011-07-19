@@ -63,14 +63,6 @@ sub getAuthenModule
 	die "Not implemented";
 }
 
-sub sanitizeCourseName
-{
-	my ($self, $course) = @_;
-	$course =~ s/\W//g;
-	$course = substr($course,0,20); # needs to fit mysql table name limits
-	return $course;
-}
-
 sub createCourse
 {
 	my ($self, $course, $students) = @_;

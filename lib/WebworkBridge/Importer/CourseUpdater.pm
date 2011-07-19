@@ -37,8 +37,15 @@ sub updateCourse
 	debug("Starting Student Update");
 	# Perform Setup
 	my $courseid = $self->{course}->{name}; # the course we're updating
-
 	my @students = @{$self->{students}}; # deref pointer
+
+	if (!$ce->{"courseName"})
+	{ # CE does not have the course loaded, need to remake
+		$ce = WeBWorK::CourseEnvironment->new({
+				%WeBWorK::SeedCE,
+				courseName => $courseid
+			});
+	}
 
 	$db = new WeBWorK::DB($ce->{dbLayout});
 	

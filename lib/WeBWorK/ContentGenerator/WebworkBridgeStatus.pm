@@ -42,19 +42,16 @@ sub body {
 	# check for error messages to display
 	my $import_error = MP2 ? $r->notes->get("import_error") : $r->notes("import_error");
 
-	print CGI::h2("Course Import");
-	print CGI::p("This course does not yet exist in Webworks, so we tried to import it.");
-
 	if ($import_error)
 	{
-		print CGI::h4("Course Import Failed");
+		print CGI::h2("Course Import Failed");
 		print CGI::p("Unfortunately, import failed. This might be a temporary condition. If it persists, please mail an error report with the time that the error occured and the exact error message below:");
 		print CGI::div({class=>"ResultsWithError"}, CGI::pre("$import_error") );
 	}
 	else
 	{
 		print CGI::h2("Course Import Successful");
-		print CGI::p("The course was successfully imported into Webwork. Please refresh to login to your course.");
+		print CGI::p("The course enrolment was successfully imported into Webwork.");
 	}
 
 	return "";

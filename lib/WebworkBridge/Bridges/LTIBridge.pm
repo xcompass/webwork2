@@ -14,6 +14,7 @@ use HTTP::Request::Common;
 use LWP::UserAgent;
 
 use WebworkBridge::Importer::Error;
+use WebworkBridge::Parser;
 use WebworkBridge::Bridges::LTIParser;
 
 # Constructor
@@ -58,7 +59,7 @@ sub run
 	{
 		debug("LTI detected\n");
 		# Check for course existence
-		my $coursename = $self->sanitizeCourseName($r->param("context_label"));
+		my $coursename = WebworkBridge::Parser::sanitizeCourseName($r->param("context_label"));
 		my $tmpce = WeBWorK::CourseEnvironment->new({
 				%WeBWorK::SeedCE,
 				courseName => $coursename
@@ -143,7 +144,7 @@ sub createCourse
 	{
 		return error("XML response received, but access denied.", "#e005");
 	}
-	$course{name} = $self->sanitizeCourseName($r->param("context_label"));
+	$course{name} = WebworkBridge::Parser::sanitizeCourseName($r->param("context_label"));
 	$course{title} = $r->param("resource_link_title");
 	$course{id} = $r->param("resource_link_id");
 
@@ -173,7 +174,7 @@ sub updateCourse
 	{
 		return error("XML response received, but access denied.", "#e005");
 	}
-	$course{name} = $self->sanitizeCourseName($r->param("context_label"));
+	$course{name} = WebworkBridge::Parser::sanitizeCourseName($r->param("context_label"));
 	$course{title} = $r->param("resource_link_title");
 	$course{id} = $r->param("resource_link_id");
 
