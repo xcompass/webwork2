@@ -125,60 +125,70 @@ sub getAuthenModule
 sub createCourse
 {
 	my $self = shift;
-	my $r = $self->{r};
-	
-	my $xml;
-	my $ret = $self->_getRoster(\$xml);
-	if ($ret)
-	{
-		return error("Unable to get class roster updating course: $ret", "#e003");
-	}
-
 
 	my %course = ();
 	my @students = ();
 
-	my $parser = WebworkBridge::Bridges::LTIParser->new(\%course, \@students);
-	$ret = $parser->parse($xml);
+	my $ret = $self->_getAndParseRoster(\%course, \@students);
 	if ($ret)
 	{
-		return error("XML response received, but access denied.", "#e005");
+		return error("Create course failed: $ret", "#e009");
 	}
-	$course{name} = WebworkBridge::Parser::sanitizeCourseName($r->param("context_label"));
-	$course{title} = $r->param("resource_link_title");
-	$course{id} = $r->param("resource_link_id");
 
-	$self->SUPER::createCourse(\%course, \@students);
-
+	$ret = $self->SUPER::createCourse(\%course, \@students);
+	if ($ret)
+	{
+		return error("Create course failed: $ret", "#e010");
+	}
 	return 0;
 }
 
 sub updateCourse
 {
 	my $self = shift;
+
+	my %course = ();
+	my @students = ();
+
+	my $ret = $self->_getAndParseRoster(\%course, \@students);
+	if ($ret)
+	{
+		return error("Update course failed: $ret", "#e009");
+	}
+
+	$ret = $self->SUPER::updateCourse(\%course, \@students);
+	if ($ret)
+	{
+		return error("Update course failed: $ret", "#e010");
+	}
+	return 0;
+}
+
+sub _getAndParseRoster
+{
+	my ($self, $course_ref, $students_ref) = @_;
 	my $r = $self->{r};
+	unless ($r->param("ext_ims_lis_memberships_url"))
+	{
+		return error("Server does not allow roster retrival.\n", "#e008");
+	}
 	
 	my $xml;
 	my $ret = $self->_getRoster(\$xml);
 	if ($ret)
 	{
-		return error("Unable to get class roster updating course: $ret", "#e003");
+		return error("Unable to connect to roster server: $ret", "#e003");
 	}
 
-	my %course = ();
-	my @students = ();
-
-	my $parser = WebworkBridge::Bridges::LTIParser->new(\%course, \@students);
+	my $parser = WebworkBridge::Bridges::LTIParser->new($course_ref, $students_ref);
 	$ret = $parser->parse($xml);
 	if ($ret)
 	{
 		return error("XML response received, but access denied.", "#e005");
 	}
-	$course{name} = WebworkBridge::Parser::sanitizeCourseName($r->param("context_label"));
-	$course{title} = $r->param("resource_link_title");
-	$course{id} = $r->param("resource_link_id");
-
-	$self->SUPER::updateCourse(\%course, \@students);
+	$course_ref->{name} = WebworkBridge::Parser::sanitizeCourseName($r->param("context_label"));
+	$course_ref->{title} = $r->param("resource_link_title");
+	$course_ref->{id} = $r->param("resource_link_id");
 
 	return 0;
 }
