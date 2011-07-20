@@ -73,11 +73,11 @@ sub run
 	}
 
 	my ($login_enable, $login_course, $login_section);
-	if (exists $ce->{bridge}{login_options})
+	if (exists $ce->{bridge}{vista_login_options})
 	{
-		$login_enable = $ce->{bridge}{login_options}{"enable_param"};
-		$login_course = $ce->{bridge}{login_options}{"course_param"};
-		$login_section = $ce->{bridge}{login_options}{"section_param"};
+		$login_enable = $ce->{bridge}{vista_login_options}{"enable_param"};
+		$login_course = $ce->{bridge}{vista_login_options}{"course_param"};
+		$login_section = $ce->{bridge}{vista_login_options}{"section_param"};
 	}
 	else
 	{
@@ -132,6 +132,17 @@ sub _runImport
 		return error("Parsing of Vista import failed.", "#e002");
 	}
 	$course{'profid'} = $r->param('vistaid');
+	my %prof = (
+		firstname => $r->param('userfirst'),
+		lastname => $r->param('userlast'),
+		loginid => $course{'profid'},
+		studentid => substr($course{'profid'}, 1),
+		email => '',
+		password => '',
+	);
+
+	push(@students, \%prof);
+
 	# store user data in loginlist
 	$self->_updateLoginList($course{'profid'}, $course{'id'}, $course{'name'});
 	# make ce, check for course existence

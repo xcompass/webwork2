@@ -34,14 +34,14 @@ sub get_credentials {
 		return 0;
 	}
 
-	my $vista_login_enable = $ce->{authen}{vista_login_options}{"enable_param"};
-	my $vista_login_course = $ce->{authen}{vista_login_options}{"course_param"};
-	my $vista_login_section = $ce->{authen}{vista_login_options}{"section_param"};
-	my $vista_login_user = $ce->{authen}{vista_login_options}{"user_param"};
-	my $vista_login_time = $ce->{authen}{vista_login_options}{"time_param"};
-	my $vista_login_mac = $ce->{authen}{vista_login_options}{"mac_param"};
-	my $vista_login_secret = $ce->{authen}{vista_login_options}{"secret"};
-	my $vista_login_time_tolerance = $ce->{authen}{vista_login_options}{"valid_time_diff"};
+	my $vista_login_enable = $ce->{bridge}{vista_login_options}{"enable_param"};
+	my $vista_login_course = $ce->{bridge}{vista_login_options}{"course_param"};
+	my $vista_login_section = $ce->{bridge}{vista_login_options}{"section_param"};
+	my $vista_login_user = $ce->{bridge}{vista_login_options}{"user_param"};
+	my $vista_login_time = $ce->{bridge}{vista_login_options}{"time_param"};
+	my $vista_login_mac = $ce->{bridge}{vista_login_options}{"mac_param"};
+	my $vista_login_secret = $ce->{bridge}{vista_login_options}{"secret"};
+	my $vista_login_time_tolerance = $ce->{bridge}{vista_login_options}{"valid_time_diff"};
 
 	# construct the mac message for authentication, the mac is basically concatenating all the http params together with the secret and then MD5 hash the whole string
 	my $mac_msg;
