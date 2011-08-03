@@ -44,27 +44,12 @@ $PAR
 
 Start by examining the features of this page.  The panels at the
 left and top help you to navigate to the different pages available in
-WeBWorK.
-$PAR
-On the left, in the ${LQ}Main Menu${RQ} panel, you have already 
-seen the ${LQ}Homework Sets${RQ} page,
-which lists all the homework assignments (with due dates, etc.) that have
-been assigned to you.  Links allow you to go to any assignment
-you want to work on.  
-$PAR
-The ${LQ}Password/Email${RQ} page lets you change your password or
-email address.  The ${LQ}Grades${RQ} page 
+WeBWorK.  You have already seen the ${LQ}Homework Sets${RQ} page,
+which lists all the homework assignments, and the
+${LQ}Change Email${RQ} page, which lets you change your  
+email address.  The ${LQ}Grades${RQ} link takes you to a page that
 shows your scores on the various assignments (but there is nothing
 much to show at this point).
-$PAR
-
-Links to your homework assignments are also listed in the ${LQ}Sets${RQ} 
-panel so you can quickly switch to another assignment.
-$PAR
-
-The ${LQ}Display Options${RQ} panel gives you control over how you want
-math equations displayed.  For example with ${LQ}MathJax${RQ} you can 
-control the size of equations, have access to accessibility options, etc.
 $PAR
 
 \{
@@ -77,7 +62,13 @@ $PAR
 #$PAR
 \}
 
-The data in the panel at the top of the page tells you where you
+At the bottom of the red panel is the list of homework sets that have
+been assigned to you.  These links allow you to go to any assignment
+you want to work on.  Right now, only the Orientation set is listed,
+but as the term progresses, the list will grow.
+$PAR
+
+The data in the red panel at the top of the page tells you where you
 are in WeBWorK's hierarchy of pages, but you can ignore that for the
 most part.  There is an additional logout button at the far right,
 however, that you will need to use when you are done using $WW (don't
@@ -91,7 +82,7 @@ $PAR
 #$PAR
 \}
 
-The main information on this page is located in the large panel
+The main information on this page is located in the large white panel
 to the left.  It shows the status of the problems in this assignment,
 and your score on the set so far.  Since you haven't yet tried any of
 the problems, your score is zero, but after you work on some of them,

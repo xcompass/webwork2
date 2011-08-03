@@ -55,85 +55,87 @@ sub body {
 	print CGI::start_form(-method=>"POST", -action=>$r->uri);
 	print $self->hidden_authen_fields;
 	
-	print CGI::h2("Change Password");
-	
-	if ($changeOptions and ($currP or $newP or $confirmP)) {
-		
-		if ($authz->hasPermissions($userID, "change_password")) {
-			
-			my $Password = eval {$db->getPassword($User->user_id)}; # checked
-			warn "Can't get password record for user '$userID': $@" if $@ or not defined $Password;
-			
-			my $EPassword = eval {$db->getPassword($EUser->user_id)}; # checked
-			warn "Can't get password record for effective user '$eUserID': $@" if $@ or not defined $EPassword;
-			
-			if (crypt($currP, $Password->password) eq $Password->password) {
-				if ($newP or $confirmP) {
-					if ($newP eq $confirmP) {
-						$EPassword->password(cryptPassword($newP));
-						eval { $db->putPassword($EPassword) };
-						if ($@) {
-							print CGI::div({class=>"ResultsWithError"},
-								CGI::p("Couldn't change $e_user_name\'s password: $@"),
-							);
-						} else {
-							print CGI::div({class=>"ResultsWithoutError"},
-								CGI::p("$e_user_name\'s password has been changed."),
-							);
-						}
-					} else {
-						print CGI::div({class=>"ResultsWithError"},
-							CGI::p(
-								"The passwords you entered in the ",
-								CGI::b("$e_user_name\'s New Password"), " and ",
-								CGI::b("Confirm $e_user_name\'s New Password"), " fields
-								don't match. Please retype your new password and try
-								again."
-							),
-						);
-					}
-				} else {
-					print CGI::div({class=>"ResultsWithError"},
-						CGI::p("$e_user_name\'s new password cannot be blank."),
-					);
-				}
-			} else {
-				print CGI::div({class=>"ResultsWithError"},
-					CGI::p(
-						"The password you entered in the ", CGI::b("$user_name\'s
-						Current Password"), " field does not match your current
-						password. Please retype your current password and try
-						again."
-					),
-				);
-			}
-			
-		} else {
-			print CGI::div({class=>"ResultsWithError"},
-				CGI::p("You do not have permission to change your password."))
-					unless $changeOptions and ($currP or $newP or $confirmP); # avoid double message
-		}
-		
-	}
-	
-	if ($authz->hasPermissions($userID, "change_password")) {
-		print CGI::table({class=>"FormLayout"},
-			CGI::Tr({},
-				CGI::td("$user_name\'s Current Password"),
-				CGI::td(CGI::password_field(-name=>"currPassword")),
-			),
-			CGI::Tr({},
-				CGI::td("$e_user_name\'s New Password"),
-				CGI::td(CGI::password_field(-name=>"newPassword")),
-			),
-			CGI::Tr({},
-				CGI::td("Confirm $e_user_name\'s New Password"),
-				CGI::td(CGI::password_field(-name=>"confirmPassword")),
-			),
-		);
-	} else {
-		print CGI::p("You do not have permission to change your password.");
-	}
+	# disabled by compass
+#	print CGI::h2("Change Password");
+#	
+#	if ($changeOptions and ($currP or $newP or $confirmP)) {
+#		
+#		if ($authz->hasPermissions($userID, "change_password")) {
+#			
+#			my $Password = eval {$db->getPassword($User->user_id)}; # checked
+#			warn "Can't get password record for user '$userID': $@" if $@ or not defined $Password;
+#			
+#			my $EPassword = eval {$db->getPassword($EUser->user_id)}; # checked
+#			warn "Can't get password record for effective user '$eUserID': $@" if $@ or not defined $EPassword;
+#			
+#			if (crypt($currP, $Password->password) eq $Password->password) {
+#				if ($newP or $confirmP) {
+#					if ($newP eq $confirmP) {
+#						$EPassword->password(cryptPassword($newP));
+#						eval { $db->putPassword($EPassword) };
+#						if ($@) {
+#							print CGI::div({class=>"ResultsWithError"},
+#								CGI::p("Couldn't change $e_user_name\'s password: $@"),
+#							);
+#						} else {
+#							print CGI::div({class=>"ResultsWithoutError"},
+#								CGI::p("$e_user_name\'s password has been changed."),
+#							);
+#						}
+#					} else {
+#						print CGI::div({class=>"ResultsWithError"},
+#							CGI::p(
+#								"The passwords you entered in the ",
+#								CGI::b("$e_user_name\'s New Password"), " and ",
+#								CGI::b("Confirm $e_user_name\'s New Password"), " fields
+#								don't match. Please retype your new password and try
+#								again."
+#							),
+#						);
+#					}
+#				} else {
+#					print CGI::div({class=>"ResultsWithError"},
+#						CGI::p("$e_user_name\'s new password cannot be blank."),
+#					);
+#				}
+#			} else {
+#				print CGI::div({class=>"ResultsWithError"},
+#					CGI::p(
+#						"The password you entered in the ", CGI::b("$user_name\'s
+#						Current Password"), " field does not match your current
+#						password. Please retype your current password and try
+#						again."
+#					),
+#				);
+#			}
+#			
+#		} else {
+#			print CGI::div({class=>"ResultsWithError"},
+#				CGI::p("You do not have permission to change your password."))
+#					unless $changeOptions and ($currP or $newP or $confirmP); # avoid double message
+#		}
+#		
+#	}
+#	
+#	if ($authz->hasPermissions($userID, "change_password")) {
+#		print CGI::table({class=>"FormLayout"},
+#			CGI::Tr({},
+#				CGI::td("$user_name\'s Current Password"),
+#				CGI::td(CGI::password_field(-name=>"currPassword")),
+#			),
+#			CGI::Tr({},
+#				CGI::td("$e_user_name\'s New Password"),
+#				CGI::td(CGI::password_field(-name=>"newPassword")),
+#			),
+#			CGI::Tr({},
+#				CGI::td("Confirm $e_user_name\'s New Password"),
+#				CGI::td(CGI::password_field(-name=>"confirmPassword")),
+#			),
+#		);
+#	} else {
+#		print CGI::p("You do not have permission to change your password.");
+#	}
+	# end
 	
 	print CGI::h2("Change Email Address");
 	

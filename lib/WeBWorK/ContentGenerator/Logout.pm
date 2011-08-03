@@ -114,12 +114,13 @@ sub body {
 	my $problemSets = $urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSets", courseID => $courseID);
 	my $loginURL = $r->location . $problemSets->path;
 	
-	print CGI::p("You have been logged out of WeBWorK.");
+	print CGI::p("You have been logged out of WeBWorK. To login again, please click on the CWL Login button below.<br />");
 	
 	print CGI::start_form(-method=>"POST", -action=>$loginURL);
 	print CGI::hidden("user", $userID);
 	print CGI::hidden("force_passwd_authen", 1);
-	print CGI::p({align=>"center"}, CGI::submit(-name=>"submit", -label=>"Log In Again"));
+#	print CGI::p({align=>"center"}, CGI::submit(-name=>"submit", -label=>"Log In Again"));
+	print '<INPUT TYPE="image" SRC="https://www.auth.cwl.ubc.ca/CWL_login_button.gif" VALUE="submit" ALT="CWL Login" NAME="submit">';
 	print CGI::end_form();
 	
 	return "";

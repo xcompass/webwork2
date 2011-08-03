@@ -6,13 +6,9 @@ Message:
     Hi $FN,
 
 Your course is at
-	http://somewhere.edu/webwork2/JT_123
+	http://webwork.elearning.ubc.ca/webwork2/MATH101
 
-Your login name is $LOGIN and your initial password is $SID
-
-You should change your password, once you have logged in, by clicking on the
-password/email link in the upper left.  After entering your new password,
-press the Change User Options button to save your change.
+Please use your CWL to login to the WeBWorK.
 
 Some help pages about WeBWorK are at URL
 	http://webwork.maa.org/wiki/Category:Students

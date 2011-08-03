@@ -141,10 +141,17 @@ sub body {
 	}
 
 	if ( $externalAuth ) {
-	    print CGI::p({}, CGI::b($course), "uses an external", 
-			 "authentication system.  You've authenticated",
-			 "through that system, but aren't allowed to log",
-			 "in to this course.");
+#	    print CGI::p({}, CGI::b($course), "uses an external", 
+#			 "authentication system.  You've authenticated",
+#			 "through that system, but aren't allowed to log",
+#			 "in to this course.");
+		my $CWL_SERVER="https://www.auth.cwl.ubc.ca/auth/login";
+		my $serviceName = "webworks_psa";
+		my $query_string = $ENV{'QUERY_STRING'};
+		$query_string =~ s/ticket=[^@@]*@@//g;
+		print q(You have logged out or you do not have permission to view this page. If you want to login, please click on the CWL login button below.<br />
+		<a href=").qq($CWL_SERVER?serviceName=$serviceName&serviceURL=).CGI::url(-path_info=>1).'?'.$query_string.q(">
+		<br /><img src="https://www.auth.cwl.ubc.ca/CWL_login_button.gif" width="76" height="25" alt="CWL Login" border="0"></a>);
 
 	} else {
 		print CGI::p({},"Please enter your username and password for ",CGI::b($course)," below:");
