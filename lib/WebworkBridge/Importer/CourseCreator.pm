@@ -52,13 +52,13 @@ sub runAddCourse
 		if (defined %WeBWorK::SeedCE)
 		{
 			$ENV{WEBWORK_ROOT} = $WeBWorK::SeedCE{webwork_dir};
-			$cmd = $ENV{WEBWORK_ROOT}."/bin/$cmd";
 		}
 		else
 		{
 			return error("Add course failed, WEBWORK_ROOT not defined in environment.","#e017");
 		}
 	}
+  $cmd = $ENV{WEBWORK_ROOT}."/bin/$cmd";
 	my $msg;
 	my $ret = customExec($cmd, \$msg);
 	if ($ret != 0)
