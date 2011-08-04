@@ -15,7 +15,9 @@
 ################################################################################
 
 package WeBWorK::ContentGenerator::Instructor::PGProblemEditor;
+use base qw(WeBWorK);
 use base qw(WeBWorK::ContentGenerator::Instructor);
+use base qw(WeBWorK::ContentGenerator::renderViaXMLRPC);
 
 use constant DEFAULT_SEED => 123456;  
 
@@ -34,7 +36,9 @@ use HTML::Entities;
 use URI::Escape;
 use WeBWorK::Utils qw(has_aux_files not_blank);
 use File::Copy;
-use WeBWorK::Utils::Tasks qw(fake_set fake_problem);
+use WeBWorK::Utils::Tasks qw(fake_user fake_set renderProblems);
+use Data::Dumper;
+use Fcntl;
 
 
 
@@ -1233,6 +1237,7 @@ sub view_form {
 
 sub view_handler {
 	my ($self, $genericParams, $actionParams, $tableParams) = @_;
+	my $r = $self->r;
 	my $courseName      =  $self->{courseID};
 	my $setName         =  $self->{setID};
 	my $fullSetName     =  $self->{fullSetID};
@@ -1273,10 +1278,10 @@ sub view_handler {
 
 		my $problemPage;
 		if ( defined($globalSet) && $globalSet->assignment_type =~ /gateway/ ) {
-			$problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::GatewayQuiz",
+			$problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::GatewayQuiz",$r,
 			courseID => $courseName, setID => "Undefined_Set");
 		}  else {
-			$problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Problem",
+			$problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Problem",$r,
 									courseID => $courseName, setID => $setName, problemID => $problemNumber
 			);
 		}
@@ -1293,7 +1298,7 @@ sub view_handler {
 			}
 		);
 	} elsif ($file_type eq 'set_header' ) { # redirect to ProblemSet
-		my $problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSet",
+		my $problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSet",$r,
 			courseID => $courseName, setID => $setName, 
 		);
 		
@@ -1310,7 +1315,7 @@ sub view_handler {
 			}
 		);	
 	} elsif ($file_type eq 'hardcopy_header') { # redirect to ProblemSet?? # it's difficult to view temporary changes for hardcopy headers
-		my $problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSet",
+		my $problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSet",$r,
 			courseID => $courseName, setID => $setName, 
 		);
 		
@@ -1328,7 +1333,7 @@ sub view_handler {
 		);	
 	
 	} elsif ($file_type eq 'course_info') {  # redirec to ProblemSets.pm
-		my $problemSetsPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSets",
+		my $problemSetsPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSets",$r,
 			courseID => $courseName);
 		$viewURL = $self->systemLink($problemSetsPage,
 			params => {
@@ -1341,7 +1346,7 @@ sub view_handler {
 			}
 		);
 	} elsif ($file_type eq 'options_info') {  # redirec to Options.pm
-		my $optionsPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Options",
+		my $optionsPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Options",$r,
 			courseID => $courseName);
 		$viewURL = $self->systemLink($optionsPage,
 			params => {
@@ -1393,6 +1398,7 @@ sub add_problem_form {
 
 sub add_problem_handler {
 	my ($self, $genericParams, $actionParams, $tableParams) = @_;
+	my $r=>$self->r;
 	#$self->addgoodmessage("add_problem_handler called");
 	my $courseName      =  $self->{courseID};
 	my $setName         =  $self->{setID};
@@ -1428,7 +1434,7 @@ sub add_problem_handler {
 		#################################################
 		# Set up redirect Problem.pm
 		#################################################
-		my $problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Problem",
+		my $problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Problem",$r,
 			courseID  => $courseName, 
 			setID     => $targetSetName, 
 			problemID => $targetProblemNumber, 
@@ -1460,7 +1466,7 @@ sub add_problem_handler {
 		#################################################
 		# Set up redirect
 		#################################################
-		my $problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSet",
+		my $problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSet",$r,
 			courseID => $courseName, setID => $targetSetName
 		);
 		$viewURL = $self->systemLink($problemPage,
@@ -1497,6 +1503,7 @@ sub save_form {
 
 sub save_handler {
 	my ($self, $genericParams, $actionParams, $tableParams) = @_;
+	my $r= $self->r;
 	#$self->addgoodmessage("save_handler called");
 	my $courseName      =  $self->{courseID};
 	my $setName         =  $self->{setID};
@@ -1534,11 +1541,11 @@ sub save_handler {
 		my $globalSet = $self->r->db->getGlobalSet( $setName );
 		my $problemPage;
 		if ( defined( $globalSet) && $globalSet->assignment_type =~ /gateway/ ) {
-			$problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::GatewayQuiz",
+			$problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::GatewayQuiz",$r,
 			courseID => $courseName, setID => "Undefined_Set");
 			# courseID => $courseName, setID => $fullSetName);
 		} else {
-			$problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Problem",
+			$problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Problem",$r,
 									courseID => $courseName, setID => $setName, problemID => $problemNumber	);
 		}
 		
@@ -1556,7 +1563,7 @@ sub save_handler {
 			}
 		);
 	} elsif ($file_type eq 'set_header' ) { # redirect to ProblemSet
-		my $problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSet",
+		my $problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSet",$r,
 			courseID => $courseName, setID => $setName, 
 		);
 		
@@ -1571,7 +1578,7 @@ sub save_handler {
 			}
 		);	
 	} elsif ( $file_type eq 'hardcopy_header') { # redirect to ProblemSet
-		my $problemPage = $self->r->urlpath->newFromModule('WeBWorK::ContentGenerator::Hardcopy',
+		my $problemPage = $self->r->urlpath->newFromModule('WeBWorK::ContentGenerator::Hardcopy',$r,
 			courseID => $courseName, setID => $setName, 
 		);
 		
@@ -1587,7 +1594,7 @@ sub save_handler {
 		);	
 	
 	} elsif ($file_type eq 'course_info') {  # redirect to ProblemSets.pm
-		my $problemSetsPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSets",
+		my $problemSetsPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSets",$r,
 			courseID => $courseName);
 		$viewURL = $self->systemLink($problemSetsPage,
 			params => {
@@ -1597,7 +1604,7 @@ sub save_handler {
 			}
 		);
 	} elsif ($file_type eq 'options_info') {  # redirect to Options.pm
-		my $optionsPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Options",
+		my $optionsPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Options",$r,
 			courseID => $courseName);
 		$viewURL = $self->systemLink($optionsPage,
 			params => {
@@ -1607,7 +1614,7 @@ sub save_handler {
 			}
 		);
 	} elsif ($file_type eq 'source_path_for_problem_file') {  # redirect to ProblemSets.pm
-		my $problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Instructor::PGProblemEditor",
+		my $problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Instructor::PGProblemEditor",$r,
 		courseID => $courseName, setID => $setName, problemID => $problemNumber
 		);
 		my $viewURL = $self->systemLink($problemPage, 
@@ -1744,6 +1751,7 @@ sub save_as_form {  # calls the save_as_handler
  
 sub save_as_handler {
 	my ($self, $genericParams, $actionParams, $tableParams) = @_;
+	my $r = $self->r;
 	#$self->addgoodmessage("save_as_handler called");
 	$self->{status_message} = ''; ## DPVC -- remove bogus old messages
 	my $courseName      =  $self->{courseID};
@@ -1880,17 +1888,17 @@ sub save_as_handler {
 	my $new_file_type;
 
 	if ($saveMode eq 'new_independent_problem' ) {
-		$problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Instructor::PGProblemEditor",
+		$problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Instructor::PGProblemEditor",$r,
 			courseID => $courseName, setID => 'Undefined_Set', problemID => 'Undefined_Set'
 		);
 		$new_file_type = 'source_path_for_problem_file';
 	} elsif ($saveMode eq 'rename') {
-		$problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Instructor::PGProblemEditor",
+		$problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Instructor::PGProblemEditor",$r,
 			courseID => $courseName, setID => $setName, problemID => $problemNumber
 		);
 		$new_file_type = $file_type;
 	} elsif ($saveMode eq 'add_to_set_as_new_problem') {
-	    $problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Instructor::PGProblemEditor",
+	    $problemPage = $self->r->urlpath->newFromModule("WeBWorK::ContentGenerator::Instructor::PGProblemEditor",$r,
 			courseID => $courseName, setID => $setName, problemID => $problemNumber
 		);
 		$new_file_type = $file_type;

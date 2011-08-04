@@ -15,6 +15,7 @@
 ################################################################################
 
 package WeBWorK::ContentGenerator::Instructor::ProblemSetList;
+use base qw(WeBWorK);
 use base qw(WeBWorK::ContentGenerator::Instructor);
 
 =head1 NAME
@@ -271,7 +272,7 @@ sub pre_header_initialize {
 			@setsToScore = $r->param("selected_sets");
 		}
 
-		my $uri = $self->systemLink( $urlpath->newFromModule('WeBWorK::ContentGenerator::Instructor::Scoring', courseID=>$courseName),
+		my $uri = $self->systemLink( $urlpath->newFromModule('WeBWorK::ContentGenerator::Instructor::Scoring', $r, courseID=>$courseName),
 						params=>{
 							scoreSelected=>"ScoreSelected",
 							selectedSet=>\@setsToScore,
@@ -1027,7 +1028,7 @@ sub score_handler {
 		@setsToScore = @{ $genericParams->{selected_sets} };
 	}
 
-	my $uri = $self->systemLink( $urlpath->newFromModule('WeBWorK::ContentGenerator::Instructor::Scoring', courseID=>$courseName),
+	my $uri = $self->systemLink( $urlpath->newFromModule('WeBWorK::ContentGenerator::Instructor::Scoring',$r, courseID=>$courseName),
 					params=>{
 						scoreSelected=>"Score Selected",
 						selectedSet=>\@setsToScore,

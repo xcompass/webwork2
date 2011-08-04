@@ -29,7 +29,7 @@ use warnings;
 use WeBWorK::CGI;
 use WeBWorK::Utils qw(readFile readDirectory);
 use WeBWorK::Utils::CourseManagement qw/listCourses/;
-
+use WeBWorK::Localize;
 sub info {
 	my ($self) = @_;
 	my $r = $self->r;
@@ -74,6 +74,7 @@ sub body {
 	my $coursesURL = $r->ce->{webworkURLs}->{root};
 	
 	my @courseIDs = listCourses($r->ce);
+	#filter underscores here!
 	
 	my $haveAdminCourse = 0;
 	foreach my $courseID (@courseIDs) {
@@ -99,11 +100,11 @@ sub body {
 	
 #	print CGI::p("<p style='color: red'>NOTICE: Due to IT service maintenance on Oct. 24, 2009 from 7:00am to 10:00am, there will be a service interruption during that time. You will not be able to login to WeBWorK. If you are planning to do the assignment on Oct. 24, please prepare it ahead of time. Sorry for the inconvenience. </p>");
 	if ($haveAdminCourse and !(-f "$coursesDir/admin/hide_directory")) {
-		my $urlpath = $r->urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSets", courseID => "admin");
+		my $urlpath = $r->urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSets", $r, courseID => "admin");
 		print CGI::p(CGI::a({href=>$self->systemLink($urlpath, authen => 0)}, "Course Administration"));
 	}
 	
-	print CGI::h2("Courses");
+	print CGI::h2($r->maketext("Courses"));
 	
 	# changed by Compass
 #	print CGI::start_ul();
@@ -112,10 +113,10 @@ sub body {
 	foreach my $courseID (sort {lc($a) cmp lc($b) } @courseIDs) {
 		next if $courseID eq "admin"; # done already above
 		next if -f "$coursesDir/$courseID/hide_directory";
-		my $urlpath = $r->urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSets", courseID => $courseID);
+		my $urlpath = $r->urlpath->newFromModule("WeBWorK::ContentGenerator::ProblemSets", $r, courseID => $courseID);
 		# changed by Compass
 		print CGI::li(CGI::a({href=>$self->systemLink($urlpath, authen => 0)}, '<img src="https://www.auth.cwl.ubc.ca/CWL_login_button.gif" width="76" height="25" alt="CWL Login" border="0">&nbsp;'.$courseID));
-	}
+	}###place to use underscore sub
 	
 	print CGI::end_ul();
 	

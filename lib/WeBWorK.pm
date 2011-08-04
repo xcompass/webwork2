@@ -39,7 +39,7 @@ BEGIN { $main::VERSION = "2.4.9"; }
 use strict;
 use warnings;
 use Time::HiRes qw/time/;
-
+use WeBWorK::Localize;
 # load WeBWorK::Constants before anything else
 # this sets package variables in several packages
 use WeBWorK::Constants;
@@ -90,7 +90,7 @@ our %SeedCE;
 
 sub dispatch($) {
 	my ($apache) = @_;
-	my $r = new WeBWorK::Request($apache);
+	my $r = WeBWorK::Request->new($apache);
 	
 	my $method = $r->method;
 	my $location = $r->location;
@@ -117,6 +117,9 @@ sub dispatch($) {
 	
 	debug("The first thing we need to do is munge the path a little:\n");
 	
+	######################################################################
+	# Create a URLPath  object
+	######################################################################
 	my ($path) = $uri =~ m/$location(.*)/;
 	$path = "/" if $path eq ""; # no path at all
 	
@@ -138,7 +141,9 @@ sub dispatch($) {
 	debug("Now we need to look at the path a little to figure out where we are\n");
 	
 	debug("-------------------- call to WeBWorK::URLPath::newFromPath\n");
-	my $urlPath = WeBWorK::URLPath->newFromPath($path);
+	my $urlPath = WeBWorK::URLPath->newFromPath($path, $r);
+	                            # pointer to parent request for access to the $ce and language translation ability
+	                            # need to add this pointer whenever a new URLPath is created.
 	debug("-------------------- call to WeBWorK::URLPath::newFromPath\n");
 	
 	unless ($urlPath) {
@@ -203,6 +208,10 @@ sub dispatch($) {
 		$apache_root_url .= ":$apache_port" if $apache_port != 80;
 	}
 	
+	
+	####################################################################
+	# Create Course Environment    $ce
+	####################################################################
 	debug("We need to get a course environment (with or without a courseID!)\n");
 	my $ce = eval { new WeBWorK::CourseEnvironment({
 		%SeedCE,
@@ -218,6 +227,13 @@ sub dispatch($) {
 	debug("Here's the course environment: $ce\n");
 	$r->ce($ce);
 	
+	
+	######################
+	# Localizing language
+	######################
+	my $language= $ce->{language} || "en";
+	$r->language_handle(WeBWorK::Localize->get_handle($language) );
+
 	my @uploads;
 	if (MP2) {
 		my $upload_table = $r->upload;
@@ -425,6 +441,154 @@ sub mungeParams {
 			}
 		}
 	}
+}
+
+
+# labeled_input subroutine
+#
+# Creates a form input element with a label added to the correct place.
+# Takes in up to six parameters:
+#
+# -type (type of input element), -name (name of input element), -id (id of the input element), -value (value of the input element), -label_text (the text on the label), -label_id (the id of the label)
+#
+# If any of the parameters are not specified, they default to "none". 
+#
+# UPDATE: updated lable tags so that their "for" property will point to the id of the element that they are labeling. This means that entering an id for the input element becomes essentially mandatory if you want the tag to work correctly.
+
+# DEPRECATED - see below
+
+# sub labeled_input
+# {
+	# my %param = (-type=>"none", -name=>"none", -value=>"none", -id=>"none", -label_text=>"none", -label_id=>"none", @_);
+	
+	# if($param{-type} eq "text" or $param{-type} eq "password" or $param{-type} eq "file"){
+		# return CGI::label({-id=>$param{-label_id}, -for=>$param{-id}},$param{-label_text}).CGI::input({-type=>$param{-type}, -name=>$param{-name}, -value=>$param{-value}, -id=>$param{-id}}).CGI::br();
+	# }
+	# elsif($param{-type} eq "checkbox" or $param{-type} eq "radio"){
+		# return CGI::input({-type=>$param{-type}, -name=>$param{-name}, -value=>$param{-value}, -id=>$param{-id}}).CGI::label({-id=>$param{-label_id}, -for=>$param{-id}},$param{-label_text}).CGI::br();
+	# }
+	# elsif($param{-type} eq "submit" or $param{-type} eq "button" or $param{-type} eq "reset"){
+		# return CGI::input({-type=>$param{-type}, -name=>$param{-name}, -value=>$param{-value}, -id=>$param{-id}}).CGI::br();
+	# }
+	# else{
+		# return "Not a valid input type";
+	# }
+# }
+
+
+# CGI_labeled_input subroutine
+
+# A replacement to the labeled_input subroutine above, created when it was determined that the old subroutine was limited in that it did not allow for attributes other than the ones that it specified.
+
+# This subroutine rectifies that problem by taking in attributes for the input elements and label elements as hashes and simply entering them into the CGI routines, which already support attributes as hash parameters.
+
+# The way it attaches label tags is similar to the labeled_input subroutine.
+
+# This subroutine has also been expanded to be able to handle select elements.
+
+# Five parameters are taken in as a hash: -type (specifying the type of the input element), -id (specifying the id of the input element), -label_text (specifying the text to go in the label), -input_attr (a hash specifying any additional attributes for the input element, if any), and -label_attr (a hash specifying additional attributes for the label element, if any).
+
+# As before, all parameters are optional, with the scalar parameters defaulting to "none" and the hash parameters defaulting to empty. 
+
+
+sub CGI_labeled_input
+{
+	my %param = (-type=>"none", -id=>"none", -label_text=>"none", -input_attr=>{}, -label_attr=>{}, @_);
+	
+	$param{-input_attr}{-type} = $param{-type};
+	$param{-input_attr}{-id} = $param{-id};
+	$param{-label_attr}{-for} = $param{-id};
+	
+	if($param{-type} eq "text" or $param{-type} eq "password" or $param{-type} eq "file"){
+		return CGI::label($param{-label_attr},$param{-label_text}).CGI::input($param{-input_attr});
+	}
+	elsif($param{-type} eq "checkbox" or $param{-type} eq "radio"){
+		return CGI::input($param{-input_attr}).CGI::label($param{-label_attr},$param{-label_text});
+	}
+	elsif($param{-type} eq "submit" or $param{-type} eq "button" or $param{-type} eq "reset"){
+		return CGI::input($param{-input_attr});
+	}
+	elsif($param{-type} eq "select"){
+		return CGI::label($param{-label_attr},$param{-label_text}).CGI::popup_menu($param{-input_attr});
+	}
+	elsif($param{-type} eq "textarea"){
+		return CGI::label($param{-label_attr},$param{-label_text}).CGI::br().CGI::br().CGI::textarea($param{-input_attr});
+	}
+	else{
+		"Not a valid input type";
+	}
+}
+
+# split_cap subroutine - ghe3
+
+# A sort of wrapper for the built-in split function which uses capital letters as a delimiter, and returns a string containing the separated substrings separated by a whitespace.  Used to make actionID's more readable.
+
+sub split_cap
+{
+	my $str = shift;
+	
+	my @str_arr = split(//,$str);
+	my $count = scalar(@str_arr);
+	
+	my $i = 0;
+	my $prev = 0;
+	my @result = ();
+	my $hasCapital = 0;
+	foreach(@str_arr){
+		if($_ =~ /[A-Z]/){
+			$hasCapital = 1;
+			push(@result, join("", @str_arr[$prev..$i-1]));
+			$prev = $i;
+		}
+		$i++;
+	}
+	
+	unless($hasCapital){
+		return $str;
+	}
+	else{
+		push(@result, join("", @str_arr[$prev..$count-1]));	
+		return join(" ",@result);
+	}
+}
+
+# underscore_to_whitespace subroutine
+
+# a simple subroutine for converting underscores in a given string to whitespace
+
+sub underscore_to_whitespace{
+	my $str = shift;
+	
+	my @strArr = split("",$str);
+	foreach(@strArr){
+		if($_ eq "_"){
+			$_ = " "
+		}
+	}
+	
+	my $result = join("",@strArr);
+	
+	return $result;
+}
+
+sub remove_duplicates{
+	my @arr = @_;
+	
+	my %unique;
+	my @result;
+	
+	foreach(@arr){
+		if(defined $unique{$_}){
+			next;
+		}
+		else{
+			push(@result, $_);
+			$unique{$_} = "seen";
+		}
+	}
+	
+	return @result;
+	
 }
 
 =head1 AUTHOR
