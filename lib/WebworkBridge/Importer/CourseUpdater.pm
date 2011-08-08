@@ -4,6 +4,9 @@ package WebworkBridge::Importer::CourseUpdater;
 use strict;
 use warnings;
 
+use Time::HiRes qw/gettimeofday/;
+use Date::Format;
+
 use WeBWorK::CourseEnvironment;
 use WeBWorK::DB;
 use WeBWorK::Debug;
@@ -79,11 +82,13 @@ sub updateCourse
 				# but re-registered
 				$person->status("C");
 				$db->putUser($person);
+				$self->addlog("Student $id rejoined $courseid");
 			}
 		}
 		else
 		{ # Update component 2: newly enrolled student, have to add
 			my $ret = $self->addStudent($_, $db);
+			$self->addlog("Student $id joined $courseid");
 			if ($ret)
 			{
 				return $ret;
@@ -100,6 +105,7 @@ sub updateCourse
 		{ # only delete missing students
 			$person->status("D");
 			$db->putUser($person);
+			$self->addlog("Student $key dropped $courseid");
 			#$db->deleteUser($key); # doesn't seem to throw an exception
 		}
 	}
@@ -158,6 +164,35 @@ sub addStudent
 		return "Add permission for $id failed!\n";
 	}
 	return 0;
+}
+
+sub addlog
+{
+	my ($self, $msg) = @_;
+
+	my ($sec, $msec) = gettimeofday;
+	my $date = time2str("%a %b %d %H:%M:%S.$msec %Y", $sec);
+
+	$msg = "[$date] $msg\n";
+
+	my $logfile = $self->{r}->ce->{bridge}{studentlog};
+	if ($logfile ne "")
+	{
+		if (open my $f, ">>", $logfile)
+		{
+			print $f $msg;
+			close $f;
+		}
+		else
+		{
+			debug("Error, unable to open student updates log file '$logfile' in append mode: $!");
+		}
+	}
+	else
+	{
+		debug("Warning, student updates log file not configured.");
+		print STDERR $msg;
+	}
 }
 
 1;
