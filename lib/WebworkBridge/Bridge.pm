@@ -73,6 +73,8 @@ sub createCourse
 	{
 		return error("Failed to create course: $ret", "#e004");
 	}
+
+	return 0;
 }
 
 sub updateCourse
@@ -85,6 +87,8 @@ sub updateCourse
 	{
 		return error("Failed to update course: $ret", "#e004");
 	}
+
+	return 0;
 }
 
 1;

@@ -16,6 +16,7 @@ use LWP::UserAgent;
 use WebworkBridge::Importer::Error;
 use WebworkBridge::Parser;
 use WebworkBridge::Bridges::LTIParser;
+use WeBWorK::Authen::LTI;
 
 # Constructor
 sub new 
@@ -71,6 +72,10 @@ sub run
 			{
 				debug("CourseID found, trying authentication\n");
 				$self->{useAuthenModule} = 1;
+				if (my $tmp = $self->_verifyMessage())
+				{
+					return $tmp;
+				}
 				return $self->updateCourse();
 			}
 			else
@@ -98,6 +103,11 @@ sub run
 		{ # course does not exist
 			debug("Course does not exist, try LTI import.");
 			$self->{useDisplayModule} = 1;
+			if (my $tmp = $self->_verifyMessage())
+			{
+				return $tmp;
+			}
+
 			return $self->createCourse();
 		}
 	}
@@ -235,7 +245,7 @@ sub _getRoster
 		extra_params => {
 			lti_version => 'LTI-1p0',
 			lti_message_type => 'basic-lis-readmembershipsforcontext',
-			id => $r->param('lis_result_sourcedid'),
+			id => $r->param('ext_ims_lis_memberships_id'),
 		}
 	);
 
@@ -251,6 +261,20 @@ sub _getRoster
 	{
 		return error("Unable to perform OAuth request.","#e007");
 	}
+}
+
+sub _verifyMessage()
+{
+	my $self = shift;
+	my $r = $self->{r};
+	# verify that the message hasn't been tampered with 
+	my $ltiauthen = WeBWorK::Authen::LTI->new($r);
+	my $ret = $ltiauthen->authenticate();
+	if (!$ret)
+	{
+		return error("Error: LTI message integrity could not verified.","#e015");
+	}
+	return 0;
 }
 
 1;
