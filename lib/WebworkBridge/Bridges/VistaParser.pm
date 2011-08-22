@@ -164,17 +164,21 @@ sub parseCourse
 sub _getCourseName
 {
 	my ($course, $section) = @_;
-	$section =~ m/(\d\d\d[A-Za-z]|\d\d\d)/g;
-	$section = $1;
+	my $sectionnum =~ m/(\d\d\d[A-Za-z]|\d\d\d)/g;
+	$sectionnum = $1;
 
 	my $ret;
-	if (defined $section)
+	if ($sectionnum)
 	{
-		$ret = $course .'-'. $section;
+		$ret = $course .'-'. $sectionnum;
+	}
+	elsif ($section)
+	{
+		$ret = $course . '-' . $section;	
 	}
 	else
 	{
-		$ret = $course;	
+		$ret = $course;
 	}
 	$ret = WebworkBridge::Parser::sanitizeCourseName($ret);
 
