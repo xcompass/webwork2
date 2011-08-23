@@ -43,7 +43,10 @@ sub sanitizeCourseName
 {
 	my $course = shift;
 	$course =~ s/[^a-zA-Z0-9_-]//g;
-	$course = substr($course,0,20); # needs to fit mysql table name limits
+	$course = substr($course,0,40); # needs to fit mysql table name limits
+	# max length of a mysql table name is 64 chars, however, webworks stick
+	# additional characters after the course name, so, to be safe, we'll
+	# have an error margin of 24 chars.
 	return $course;
 }
 

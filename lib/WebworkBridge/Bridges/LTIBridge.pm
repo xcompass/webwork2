@@ -95,7 +95,6 @@ sub run
 				use CGI;
 				my $q = CGI->new();
 				my $redir = $r->uri . $r->param("context_label") . "/?". $args;
-				debug($redir);
 				print $q->redirect($redir);
 			}
 		}
@@ -231,7 +230,6 @@ sub _getRoster
 	{
 		return error("Unknown secret key '$key', is there a typo?", "#e006");
 	}
-	debug("##### LTI Secret: " . $r->ce->{bridge}{$key});
 	my $request = Net::OAuth->request("request token")->new(
 		consumer_key => $key,
 		consumer_secret => $r->ce->{bridge}{$key},
