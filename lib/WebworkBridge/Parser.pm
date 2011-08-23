@@ -9,9 +9,10 @@ use WebworkBridge::Importer::Error;
 # Constructor
 sub new
 {
-	my ($class, $course_ref, $students_ref) = @_;
+	my ($class, $r, $course_ref, $students_ref) = @_;
 
 	my $self = {
+		r => $r,
 		course => $course_ref,
 		students => $students_ref
 	};

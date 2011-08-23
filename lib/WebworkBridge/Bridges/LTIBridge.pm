@@ -207,7 +207,7 @@ sub _getAndParseRoster
 		return error("Unable to connect to roster server: $ret", "#e003");
 	}
 
-	my $parser = WebworkBridge::Bridges::LTIParser->new($course_ref, $students_ref);
+	my $parser = WebworkBridge::Bridges::LTIParser->new($r, $course_ref, $students_ref);
 	$ret = $parser->parse($xml);
 	if ($ret)
 	{

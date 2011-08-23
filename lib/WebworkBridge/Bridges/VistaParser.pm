@@ -6,20 +6,13 @@ use base qw(WebworkBridge::Parser);
 use strict;
 use warnings;
 
-
-use Data::Dumper;
 use WebworkBridge::Importer::Error;
 
 ##### Exported Functions #####
 sub new
 {
-	my ($class, $course_ref, $students_ref) = @_;
-
-	my $self = {
-		course => $course_ref,
-		students => $students_ref
-	};
-
+	my ($class, $r, $course_ref, $students_ref) = @_;
+	my $self = $class->SUPER::new($r, $course_ref, $students_ref);
 	bless $self, $class;
 	return $self;
 }
@@ -164,8 +157,8 @@ sub parseCourse
 
 sub _getCourseName
 {
-	my ($course, $sectionnum) = @_;
-	my $section = $sectionnum;
+	my ($course, $section) = @_;
+	my $sectionnum = $section;
 	$sectionnum =~ m/(\d\d\d[A-Za-z]|\d\d\d)/g;
 	$sectionnum = $1;
 
