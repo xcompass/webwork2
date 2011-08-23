@@ -60,7 +60,9 @@ sub run
 	{
 		debug("LTI detected\n");
 		# Check for course existence
-		my $coursename = WebworkBridge::Parser::sanitizeCourseName($r->param("context_label"));
+
+		my $parser = WebworkBridge::Bridges::LTIParser->new($r);
+		my $coursename = $parser->getCourseName($r->param("context_label"));
 		my $tmpce = WeBWorK::CourseEnvironment->new({
 				%WeBWorK::SeedCE,
 				courseName => $coursename
@@ -94,7 +96,7 @@ sub run
 
 				use CGI;
 				my $q = CGI->new();
-				my $redir = $r->uri . $r->param("context_label") . "/?". $args;
+				my $redir = $r->uri . $coursename . "/?". $args;
 				print $q->redirect($redir);
 			}
 		}
@@ -212,7 +214,7 @@ sub _getAndParseRoster
 	{
 		return error("XML response received, but access denied.", "#e005");
 	}
-	$course_ref->{name} = WebworkBridge::Parser::sanitizeCourseName($r->param("context_label"));
+	$course_ref->{name} = $parser->getCourseName($r->param("context_label"));
 	$course_ref->{title} = $r->param("resource_link_title");
 	$course_ref->{id} = $r->param("resource_link_id");
 
