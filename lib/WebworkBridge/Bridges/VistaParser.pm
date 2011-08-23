@@ -155,6 +155,7 @@ sub parseCourse
 		return;
 	}
 	$course{'name'} = _getCourseName($course{'course'}, $course{'section'});
+	$course{'vistaname'} = $course{'course'} . ' - ' . $course{'section'};
 	delete($course{'course'});
 	delete($course{'section'});
 	return %course;
@@ -163,8 +164,9 @@ sub parseCourse
 
 sub _getCourseName
 {
-	my ($course, $section) = @_;
-	my $sectionnum =~ m/(\d\d\d[A-Za-z]|\d\d\d)/g;
+	my ($course, $sectionnum) = @_;
+	my $section = $sectionnum;
+	$sectionnum =~ m/(\d\d\d[A-Za-z]|\d\d\d)/g;
 	$sectionnum = $1;
 
 	my $ret;

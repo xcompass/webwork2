@@ -144,7 +144,8 @@ sub _runImport
 	push(@students, \%prof);
 
 	# store user data in loginlist
-	$self->_updateLoginList($course{'profid'}, $course{'id'}, $course{'name'});
+	$self->_updateLoginList($course{'profid'}, $course{'id'}, $course{'name'}, 
+		$course{'vistaname'});
 	# make ce, check for course existence
 	my $tmpce = WeBWorK::CourseEnvironment->new({
 			%WeBWorK::SeedCE,
@@ -175,12 +176,12 @@ sub _runJavaImport
 
 sub _updateLoginList
 {
-	my ($self, $profid, $courseid, $course) = @_;
+	my ($self, $profid, $courseid, $course, $vistaname) = @_;
 
 	my $file = $self->{r}->ce->{bridge}{vista_loginlist};
-	my $time = POSIX::strftime("%Y-%m-%d %H:%M:%S\n", localtime);
+	my $time = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime);
 
-	my $info = "$profid\t$courseid\t$course\t$time";
+	my $info = "$profid\t$courseid\t$course\t$vistaname\t$time\n";
 
 	if (-e $file)
 	{
