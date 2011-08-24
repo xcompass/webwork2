@@ -67,7 +67,7 @@ sub get_credentials {
             # if there's no ticket, redirect to get one
             #
             my $this_script = "https://"  . $ENV{'SERVER_NAME'} ;
-			if( $ENV{"SERVER_PORT"} != 80 || $ENV{"SERVER_PORT"} != 443 ) 
+			if( $ENV{"SERVER_PORT"} != 80 && $ENV{"SERVER_PORT"} != 443 ) 
 			{
 				$this_script = $this_script . ":" . $ENV{"SERVER_PORT"};
 			}
