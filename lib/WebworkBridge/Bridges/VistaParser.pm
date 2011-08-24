@@ -148,53 +148,11 @@ sub parseCourse
 	{ # any missing data means we've failed
 		return;
 	}
-	$course{'name'} = $self->_getCourseName($course{'course'}, $course{'section'});
+	$course{'name'} = $self->getCourseName($course{'course'}, $course{'section'});
 	$course{'vistaname'} = $course{'course'} . ' - ' . $course{'section'};
 	delete($course{'course'});
 	delete($course{'section'});
 	return %course;
-}
-
-
-sub _getCourseName
-{
-	my ($self, $course, $section) = @_;
-	my $r = $self->{r};
-	my $ce = $r->ce;
-
-	# read configuration to see if there are any custom mappings we
-	# should use instead
-	my $vistaname = $course . ' - ' . $section;
-	while (my ($key, $val) = each(%{$ce->{bridge}{custom_course_mapping}}))
-	{
-		if ($vistaname eq $key)
-		{
-			debug("Using mapping for course '$vistaname' to '$val'");
-			return $val;
-		}
-	}
-
-	# if no configuration, then we build our own course name 
-	my $sectionnum = $section;
-	$sectionnum =~ m/(\d\d\d[A-Za-z]|\d\d\d)/g;
-	$sectionnum = $1;
-
-	my $ret;
-	if ($sectionnum)
-	{
-		$ret = $course .'-'. $sectionnum;
-	}
-	elsif ($section)
-	{
-		$ret = $course . '-' . $section;	
-	}
-	else
-	{
-		$ret = $course;
-	}
-	$ret = WebworkBridge::Parser::sanitizeCourseName($ret);
-
-	return $ret;
 }
 
 # test code

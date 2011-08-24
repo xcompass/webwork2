@@ -96,7 +96,7 @@ sub run
 		debug("Using Vista's Login2 module, redirecting to get a course ID.\n");
 		my $parser = WebworkBridge::Bridges::VistaParser->new($r);
 
-		my $courseName = $parser->_getCourseName(
+		my $courseName = $parser->getCourseName(
 			$r->param($login_course),
 			$r->param($login_section)
 		);
