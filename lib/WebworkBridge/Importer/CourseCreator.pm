@@ -45,8 +45,9 @@ sub runAddCourse
 	my $classlistfile = $self->getClasslistdir();
 	my $profid = $self->{course}->{profid};
 	my $course = $self->{course}->{name};
-	
-	my $cmd = "addcourse --users='$classlistfile' --professors=$profid $course";
+
+	# notice admin id
+	my $cmd = "addcourse --users='$classlistfile' --professors=$profid,admin $course";
 	if (!defined $ENV{WEBWORK_ROOT})
 	{
 		if (defined %WeBWorK::SeedCE)
@@ -72,6 +73,7 @@ sub createClassList
 {
 	# $profid, $proffirst, $proflast
 	my $self = shift;
+	my $r = $self->{r};	
 
 	my %course = %{$self->{course}};
 	my @students = @{$self->{students}};
@@ -105,6 +107,11 @@ sub createClassList
 			print FILE ","; # password
 		($id eq $profid) ? print FILE "10\n" : print FILE "0\n";
 	}
+
+	# add admin user
+	my $adminstring = "admin,admin,admin,P,,,,,admin," .
+		cryptPassword($r->ce->{bridge}{adminuserpw}) . ",10\n";
+	print FILE $adminstring;
 
 	close FILE;
 
