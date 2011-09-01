@@ -656,6 +656,7 @@ sub links {
 	my %systemlink_args;
 	$systemlink_args{params} = \%params if %params;
 	
+	print CGI::h2($r->maketext("Main Menu"));
 	print CGI::start_ul();
 	print CGI::start_li(); # Courses
 	# added by compass
@@ -736,7 +737,7 @@ sub links {
 				print CGI::end_li(); # end Homework Set Editor
 				
 				print CGI::li(&$makelink("${pfx}SetMaker", text=>$r->maketext("Library Browser"), urlpath_args=>{%args}, systemlink_args=>\%systemlink_args));
-				
+				print CGI::li(&$makelink("${pfx}SetMaker2", text=>$r->maketext("Library Browser 2"), urlpath_args=>{%args}, systemlink_args=>\%systemlink_args));
 				print CGI::start_li(); # Stats
 				print &$makelink("${pfx}Stats", urlpath_args=>{%args}, systemlink_args=>\%systemlink_args);
 				if ($userID ne $eUserID or defined $setID) {
@@ -967,6 +968,24 @@ Print links to siblings of the current object.
 
 #sub siblings {  }
 
+=item footer()
+
+	-by ghe3
+	
+	combines timestamp() and other elements of the footer, including the copyright, into one output subroutine,
+=cut
+
+sub footer(){
+	my $self = shift;
+	my $r = $self->r;
+	
+	print CGI::p({-id=>"last-modified"}, $r->maketext("Page generated at [_1]", timestamp($self)));
+	print CGI::div({-id=>"copyright"}, "WeBWorK &#169; 1996-2011", CGI::a({-href=>"http://webwork.maa.org/"}, $r->maketext("The WeBWorK Project")));
+	
+	return "";
+}
+
+ 
 =item timestamp()
 
 Defined in this package.
@@ -1037,7 +1056,7 @@ sub title {
 	#print "\n<!-- BEGIN " . __PACKAGE__ . "::title -->\n";
 	#print underscore2nbsp($r->urlpath->name);
 	my $name = $r->urlpath->name;
-	$name =~ s/_/ /g;
+	# $name =~ s/_/ /g;
 	print $name;
 	#print "<!-- END " . __PACKAGE__ . "::title -->\n";
 	
@@ -1286,6 +1305,7 @@ we have systemLink().
 
 sub pathMacro {
 	my ($self, $args, @path) = @_;
+	my $r = $self->r;
 	my %args = %$args;
 	$args{style} = "text" if $args{textonly};
 	
@@ -1302,9 +1322,9 @@ sub pathMacro {
 		my $name = shift @path;
 		my $url = shift @path;
 		if ($url and not $args{textonly}) {
-			push @result, CGI::a({-href=>"$url?$auth"}, $name);
+			push @result, CGI::a({-href=>"$url?$auth"}, $r->maketext(lc($name)));
 		} else {
-			push @result, $name;
+			push @result, $r->maketext($name);
 		}
 	}
 	
@@ -1379,18 +1399,18 @@ sub navMacro {
 	while (@links) {
 		my $name = shift @links;
 		my $url = shift @links;
-		my $img = shift @links;
-		my $html = 
-			($img && $args{style} eq "images")
-			? CGI::img(
-				{src=>($prefix."/".$img.$args{imagesuffix}),
-				border=>"",
-				alt=>"$name"})
-			: $name;
+		my $direction = shift @links;
+		my $html = ($direction && $args{style} eq "buttons") ? $direction : $name;
+			# ($img && $args{style} eq "images")
+			# ? CGI::img(
+				# {src=>($prefix."/".$img.$args{imagesuffix}),
+				# border=>"",
+				# alt=>"$name"})
+			# : $name."lol";
 #		unless($img && !$url) {  ## these are now "disabled" versions in grey -- DPVC
 			push @result, $url
-				? CGI::a({-href=>"$url?$auth$tail"}, $html)
-				: $html;
+				? CGI::a({-href=>"$url?$auth$tail", -class=>"nav_button"}, $html)
+				: CGI::span({-class=>"gray_button"}, $html);
 #		}
 	}
 
@@ -1441,11 +1461,14 @@ method. The simplest way to to this is:
 
 sub optionsMacro {
 	my ($self, %options) = @_;
+	my $r = $self->r;
 	
 	my @options_to_show = @{$options{options_to_show}} if exists $options{options_to_show};
 	@options_to_show = "displayMode" unless @options_to_show;  #FIXME -- I don't understant this -- type seems wrong
 	my %options_to_show; @options_to_show{@options_to_show} = (); # make hash for easy lookups
 	my @extra_params = @{$options{extra_params}} if exists $options{extra_params};
+	
+	print CGI::h2($r->maketext("Display Options"));
 	
 	my $result = CGI::start_form("POST", $self->r->uri);
 	$result .= $self->hidden_authen_fields;
@@ -1484,7 +1507,7 @@ sub optionsMacro {
 		$result .= CGI::br();
 	}
 	
-	$result .= CGI::submit(-name=>"redisplay", -label=>"Apply Options");
+	$result .= CGI::submit(-name=>"redisplay", -label=>$r->maketext("Apply Options"));
 	$result .= CGI::end_div();
 	$result .= CGI::end_form();
 	
@@ -1529,7 +1552,7 @@ sub feedbackMacro_email {
 	# feedback form url
 	my $feedbackPage = $urlpath->newFromModule("WeBWorK::ContentGenerator::Feedback",  $r, courseID => $courseID);
 	my $feedbackURL = $self->systemLink($feedbackPage, authen => 0); # no authen info for form action
-	my $feedbackName = $ce->{feedback_button_name} || $r->maketext("Email instructor");
+	my $feedbackName = $r->maketext($ce->{feedback_button_name}) || $r->maketext("Email instructor");
 	
 	my $result = CGI::start_form(-method=>"POST", -action=>$feedbackURL) . "\n";
 	$result .= $self->hidden_authen_fields . "\n";
@@ -1538,7 +1561,7 @@ sub feedbackMacro_email {
 	    next if $key eq 'pg_object';    # not used in internal feedback mechanism
 		$result .= CGI::hidden($key, $value) . "\n";
 	}
-	$result .= CGI::p({-align=>"left"}, CGI::submit(-name=>"feedbackForm", -label=>$feedbackName));
+	$result .= CGI::p({-align=>"left"}, CGI::submit(-name=>"feedbackForm", -value=>$feedbackName));
 	$result .= CGI::endform() . "\n";
 	
 	return $result;
@@ -1552,7 +1575,7 @@ sub feedbackMacro_form {
 	my $courseID = $urlpath->arg("courseID");
 	
 	# feedback form url
-	my $feedbackName = $ce->{feedback_button_name} || $r->maketext("Email instructor");
+	my $feedbackName = $r->maketext($ce->{feedback_button_name}) || $r->maketext("Email instructor");
 	
 	my $result = CGI::start_form(-method=>"POST", -action=>$feedbackFormURL,-target=>"WW_info") . "\n";
 	$result .= $self->hidden_authen_fields . "\n";
@@ -1566,7 +1589,7 @@ sub feedbackMacro_form {
 			$result .= CGI::hidden($key, $value) . "\n";
 		}
 	}
-	$result .= CGI::p({-align=>"left"}, CGI::submit(-name=>"feedbackForm", -label=>$feedbackName));
+	$result .= CGI::p({-align=>"left"}, CGI::submit(-name=>"feedbackForm", -value=>$feedbackName));
 	$result .= CGI::endform() . "\n";
 	
 	return $result;
@@ -1575,7 +1598,7 @@ sub feedbackMacro_form {
 sub feedbackMacro_url {
 	my ($self, $url) = @_;
 	my $r = $self->r;
-	my $feedbackName = $r->ce->{feedback_button_name} || $r->maketext("Email instructor");
+	my $feedbackName = $r->maketext($r->ce->{feedback_button_name}) || $r->maketext("Email instructor");
 	return CGI::a({-href=>$url}, $feedbackName);
 }
 
