@@ -50,6 +50,10 @@ sub parse
 		elsif (substr($_,0,9) eq 'Firstname')
 		{
 			my %tmp = $self->parseStudent($_);
+			if ($tmp{'drop'})
+			{
+				next;
+			}
 			unless (%tmp)
 			{
 				return error("Parsing of student data from Vista failed on this line: " . $_ . " END","#e013");
@@ -76,6 +80,7 @@ sub parse
 sub parseStudent
 {
 	my ($self, $param) = @_;
+	my $r = $self->{r};
 	my %student;
 	# our data is tab delimited
 	my @data = split(/\t/, $param);
@@ -99,6 +104,15 @@ sub parseStudent
 		{ #	sets the Vista learning context id (lcid) e.g.: s12345678
 			$student{'loginid'} = $setting[1];
 			$student{'studentid'} = substr($setting[1], 1);
+			foreach ($r->ce->{bridge}{vista_blacklist})
+			{
+				if ($student{'loginid'} =~ m/$_/)
+				{
+					debug("Blacklisted student ".$student{'loginid'}.
+						" dropped from import");
+					$student{'drop'} = 1;
+				}
+			}
 		}
 	}
 	$student{'email'} = ""; # no email address from Vista, unfortunately
