@@ -41,6 +41,7 @@ sub createCourse
 sub runAddCourse
 {
 	my $self = shift;
+	my $ce = $self->{r}->ce;
 
 	my $classlistfile = $self->getClasslistdir();
 	my $profid = $self->{course}->{profid};
@@ -48,6 +49,10 @@ sub runAddCourse
 
 	# notice admin id
 	my $cmd = "addcourse --users='$classlistfile' --professors=$profid,admin $course";
+	if ($ce->{bridge}{course_template})
+	{
+		$cmd .= " --templates-from=" . $ce->{bridge}{course_template};
+	}
 	if (!defined $ENV{WEBWORK_ROOT})
 	{
 		if (defined %WeBWorK::SeedCE)
@@ -59,7 +64,7 @@ sub runAddCourse
 			return error("Add course failed, WEBWORK_ROOT not defined in environment.","#e017");
 		}
 	}
-  $cmd = $ENV{WEBWORK_ROOT}."/bin/$cmd";
+	$cmd = $ENV{WEBWORK_ROOT}."/bin/$cmd";
 	my $msg;
 	my $ret = customExec($cmd, \$msg);
 	if ($ret != 0)
