@@ -3,7 +3,9 @@
 use strict;
 use warnings;
 
-BEGIN {
+BEGIN
+{
+	$ENV{WEBWORK_ROOT} = "/home/john/webworkdev/webwork2";
 	die "WEBWORK_ROOT not found in environment.\n"
 		unless exists $ENV{WEBWORK_ROOT};
 }
@@ -34,7 +36,7 @@ foreach (@lines)
 	my $lcid = $line[1];
 	my $course = $line[2];
 
-	my $cmd = "./updateclass.pl $userid $lcid $course";
+	my $cmd = $ENV{WEBWORK_ROOT} . "/lib/WebworkBridge/updateclass.pl $userid $lcid $course";
 	my $ret = `$cmd\n`;
 	if ($?)
 	{
