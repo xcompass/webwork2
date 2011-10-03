@@ -12,6 +12,8 @@ use WeBWorK::Utils qw(runtime_use readFile cryptPassword);
 
 use WebworkBridge::Importer::Error;
 
+use Text::CSV;
+
 # Constructor
 sub new
 {
@@ -145,15 +147,20 @@ sub getEmaillistEntry
 			error("Unable to open the emaillist file.","#e019");
 			return "";
 		}
+
+		my $csv = Text::CSV->new();
+
 		my @lines = <EMAILLISTFILE>;
 		foreach (@lines)
 		{
-			chomp; # avoid \n on last field
-			my @line = split(/\t/,$_);
-			if ($line[0] eq $id)
+			if ($csv->parse($_))
 			{
-				debug("Email match found for $id on line $_");
-				return $line[1];
+				my @line = $csv->fields();
+				if ($line[2] eq $id)
+				{
+					debug("Email match found for $id on line $_");
+					return $line[3];
+				}
 			}
 		}
 		close EMAILLISTFILE;
