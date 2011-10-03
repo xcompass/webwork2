@@ -104,8 +104,10 @@ sub createClassList
 		print FILE ","; # comment
 		print FILE ","; # section
 		print FILE ","; # recitation
-		print FILE ","; # email
-		print FILE "$i->{'loginid'},"; # login id
+		$i->{email} ? 
+			print FILE $i->{email} ."," : 
+			print FILE $self->getEmaillistEntry($i->{'studentid'}) .",";
+		print FILE "$id,"; # login id
 		#print FILE ","; # password TODO uncomment below, delete this line
 		$i->{password} ? 
 			print FILE cryptPassword($i->{password})."," : 
@@ -130,6 +132,36 @@ sub getClasslistdir
 	return $self->{r}->ce->{bridge}{classlistdir} . $course;
 }
 
+sub getEmaillistEntry
+{
+	my ($self, $id) = @_;
+
+	my $file = $self->{r}->ce->{bridge}{emaillist};
+	if (-e $file)
+	{
+		my $ret = open EMAILLISTFILE, "+<$file";
+		if (!$ret)
+		{
+			error("Unable to open the emaillist file.","#e019");
+			return "";
+		}
+		my @lines = <EMAILLISTFILE>;
+		foreach (@lines)
+		{
+			chomp; # avoid \n on last field
+			my @line = split(/\t/,$_);
+			if ($line[0] eq $id)
+			{
+				debug("Email match found for $id on line $_");
+				return $line[1];
+			}
+		}
+		close EMAILLISTFILE;
+	}
+
+	return "";
+}
+
 # Perl 5.8.8 doesn't let you override `` for testing. This sub gets
 # around that since we can still override subs.
 sub customExec
@@ -144,41 +176,5 @@ sub customExec
 	}
 	return 0;
 }
-
-#my %course = (
-#	profid => '3',
-#	name => 'ICE100-100',
-#	title => 'The study of ice',
-#	id => '4',
-#);
-#
-#my @students = ();
-#my %tmp1 = (
-#	firstname => 'A',
-#	lastname => 'A',
-#	studentid => '3',
-#	loginid => '3',
-#	email => 'A@A.A',
-#	password => '',
-#);
-#push(@students, \%tmp1);
-#
-#my %tmp = (
-#	firstname => 'B',
-#	lastname => 'B',
-#	studentid => '4',
-#	loginid => '4',
-#	email => 'B@B.B',
-#	password => '4',
-#);
-#push(@students, \%tmp);
-#
-#
-#my %last = ( classlistdir => '/tmp/' );
-#my %b = (bridge => \%last);
-#my $r = \%b;
-#
-#my $create = WebworkBridge::Importer::CourseCreator->new($r, \%course, \@students);
-#print "ret: " .$create->createCourse() . "\n";
 
 1;
