@@ -11,6 +11,7 @@ use WeBWorK::CourseEnvironment;
 use WeBWorK::DB;
 use WeBWorK::Debug;
 use WeBWorK::Utils qw(runtime_use readFile cryptPassword);
+use WeBWorK::ContentGenerator::Instructor;
 
 use WebworkBridge::Importer::Error;
 
@@ -52,6 +53,10 @@ sub updateCourse
 
 	$db = new WeBWorK::DB($ce->{dbLayout});
 	
+	# Update $r with the course aware CE and DB objects
+	$r->ce($ce);
+	$r->db($db);
+
 	# Get already existing users in the database
 	my @userIDs;
 	eval { @userIDs = $db->listUsers(); };
@@ -83,12 +88,16 @@ sub updateCourse
 				$person->status("C");
 				$db->putUser($person);
 				$self->addlog("Student $id rejoined $courseid");
+				# assign all visible homeworks to user
+				$self->assignAllVisibleSetsToUser($id);
 			}
 		}
 		else
 		{ # Update component 2: newly enrolled student, have to add
 			my $ret = $self->addStudent($_, $db);
 			$self->addlog("Student $id joined $courseid");
+			# assign all visible homeworks to user
+			$self->assignAllVisibleSetsToUser($id);
 			if ($ret)
 			{
 				return $ret;
@@ -163,6 +172,7 @@ sub addStudent
 	{
 		return "Add permission for $id failed!\n";
 	}
+
 	return 0;
 }
 
@@ -193,6 +203,36 @@ sub addlog
 		debug("Warning, student updates log file not configured.");
 		print STDERR $msg;
 	}
+}
+
+# Taken from assignAllSetsToUser() in WeBWorK::ContentGenerator::Instructor
+sub assignAllVisibleSetsToUser {
+	my ($self, $userID) = @_;
+	my $r = $self->{r};
+	my $db = $r->db();
+	
+	# instructor access object
+	my $nocontent;
+	my $inst_access = WeBWorK::ContentGenerator::Instructor->new($r);
+
+	my @globalSetIDs = $db->listGlobalSets;
+	my @GlobalSets = $db->getGlobalSets(@globalSetIDs);
+	
+	my @results;
+	
+	my $i = 0;
+	foreach my $GlobalSet (@GlobalSets) {
+		if (not defined $GlobalSet) {
+			warn "record not found for global set $globalSetIDs[$i]";
+		} 
+		elsif ($GlobalSet->visible) {
+			my @result = $inst_access->assignSetToUser($userID, $GlobalSet);
+			push @results, @result if @result;
+		}
+		$i++;
+	}
+	
+	return @results;
 }
 
 1;
