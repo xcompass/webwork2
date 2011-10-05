@@ -23,14 +23,11 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
-<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-<meta http-equiv="Pragma" content="no-cache"/>
-<meta http-equiv="expires" content="Wed, 21 Dec 2005 00:00:01 GMT"/>
 <title><!--#path style="text" text=" : " textonly="1"--></title>
 <!--#head-->
 <link rel="stylesheet" type="text/css" href="<!--#url type="webwork" name="htdocs"-->/css/ur.css"/>
 </head>
-<body>
+<body bgcolor="white" onload="if (typeof(initializeWWquestion) == 'function') {initializeWWquestion()}">
 <table width="100%" cellpadding="10" cellspacing="0" border="0">
 	<tr valign="top">
 		<td align="left" valign="top" rowspan="2" class="LeftPanel">
@@ -45,7 +42,7 @@
 			<!--
 			<hr />
 			<div class="Logo">				
-				<a href="mailto:webwork.support@ubc.ca" target="bugzillaPage">Report bugs</a>
+				<a href="http://webwork3.math.rochester.edu/bugzilla/enter_bug.cgi?product=WeBWorK%20mod_perl" target="bugzillaPage">Report bugs</a>
 			</div>
 			-->
 			<!--#if loggedin="1"-->
@@ -109,6 +106,10 @@
 				<div class="Message">
 					<!--#message-->
 				</div>
+			<!--#endif-->
+			<!--#if can="post_header_text"-->
+				<!--#post_header_text-->
+				<hr style="clear:both"/>
 			<!--#endif-->
 
 			<!--#if can="body"-->
