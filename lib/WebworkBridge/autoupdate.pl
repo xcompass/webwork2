@@ -40,9 +40,9 @@ foreach (@lines)
 	my $ret = `$cmd\n`;
 	if ($?)
 	{
-		die "Autoupdate failed.\n";
+		die "Autoupdate failed for $course.\n";
 	}
-	print "Autoupdate done!\n";
+	print "Autoupdate for $course done!\n";
 }
 
 close FILE;

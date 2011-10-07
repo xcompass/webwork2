@@ -11,7 +11,7 @@ use WeBWorK::CourseEnvironment;
 use WeBWorK::DB;
 use WeBWorK::Debug;
 use WeBWorK::Utils qw(runtime_use readFile cryptPassword);
-use WeBWorK::ContentGenerator::Instructor;
+use WeBWorK::DB::Utils qw(initializeUserProblem);
 
 use WebworkBridge::Importer::Error;
 
@@ -53,10 +53,6 @@ sub updateCourse
 
 	$db = new WeBWorK::DB($ce->{dbLayout});
 	
-	# Update $r with the course aware CE and DB objects
-	$r->ce($ce);
-	$r->db($db);
-
 	# Get already existing users in the database
 	my @userIDs;
 	eval { @userIDs = $db->listUsers(); };
@@ -89,7 +85,7 @@ sub updateCourse
 				$db->putUser($person);
 				$self->addlog("Student $id rejoined $courseid");
 				# assign all visible homeworks to user
-				$self->assignAllVisibleSetsToUser($id);
+				$self->assignAllVisibleSetsToUser($id, $db);
 			}
 		}
 		else
@@ -97,7 +93,7 @@ sub updateCourse
 			my $ret = $self->addStudent($_, $db);
 			$self->addlog("Student $id joined $courseid");
 			# assign all visible homeworks to user
-			$self->assignAllVisibleSetsToUser($id);
+			$self->assignAllVisibleSetsToUser($id, $db);
 			if ($ret)
 			{
 				return $ret;
@@ -207,14 +203,8 @@ sub addlog
 
 # Taken from assignAllSetsToUser() in WeBWorK::ContentGenerator::Instructor
 sub assignAllVisibleSetsToUser {
-	my ($self, $userID) = @_;
-	my $r = $self->{r};
-	my $db = $r->db();
+	my ($self, $userID, $db) = @_;
 	
-	# instructor access object
-	my $nocontent;
-	my $inst_access = WeBWorK::ContentGenerator::Instructor->new($r);
-
 	my @globalSetIDs = $db->listGlobalSets;
 	my @GlobalSets = $db->getGlobalSets(@globalSetIDs);
 	
@@ -226,13 +216,69 @@ sub assignAllVisibleSetsToUser {
 			warn "record not found for global set $globalSetIDs[$i]";
 		} 
 		elsif ($GlobalSet->visible) {
-			my @result = $inst_access->assignSetToUser($userID, $GlobalSet);
+			my @result = $self->assignSetToUser($userID, $GlobalSet, $db);
 			push @results, @result if @result;
 		}
 		$i++;
 	}
 	
 	return @results;
+}
+
+# Taken and modified from WeBWorK::ContentGenerator::Instructor
+sub assignSetToUser {
+	my ($self, $userID, $GlobalSet, $db) = @_;
+	my $setID = $GlobalSet->set_id;
+	
+	my $UserSet = $db->newUserSet;
+	$UserSet->user_id($userID);
+	$UserSet->set_id($setID);
+	
+	my @results;
+	my $set_assigned = 0;
+	
+	eval { $db->addUserSet($UserSet) };
+	if ($@) {
+		if ($@ =~ m/user set exists/) {
+			push @results, "set $setID is already assigned to user $userID.";
+			$set_assigned = 1;
+		} else {
+			die $@;
+		}
+	}
+	
+	my @GlobalProblems = grep { defined $_ } $db->getAllGlobalProblems($setID);
+	foreach my $GlobalProblem (@GlobalProblems) {
+		my @result = $self->assignProblemToUser($userID, $GlobalProblem, $db);
+		push @results, @result if @result and not $set_assigned;
+	}
+	
+	return @results;
+}
+
+# Taken and modified from WeBWorK::ContentGenerator::Instructor
+sub assignProblemToUser {
+	my ($self, $userID, $GlobalProblem, $db) = @_;
+	
+	my $UserProblem = $db->newUserProblem;
+	$UserProblem->user_id($userID);
+	$UserProblem->set_id($GlobalProblem->set_id);
+	$UserProblem->problem_id($GlobalProblem->problem_id);
+	my $seed; # yes, I know it's empty, just needed a null value for this 
+	initializeUserProblem($UserProblem, $seed);
+	
+	eval { $db->addUserProblem($UserProblem) };
+	if ($@) {
+		if ($@ =~ m/user problem exists/) {
+			return "problem " . $GlobalProblem->problem_id
+				. " in set " . $GlobalProblem->set_id
+				. " is already assigned to user $userID.";
+		} else {
+			die $@;
+		}
+	}
+	
+	return ();
 }
 
 1;
