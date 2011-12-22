@@ -8,9 +8,14 @@ BEGIN
 	$ENV{WEBWORK_ROOT} = "/home/john/webworkdev/webwork2";
 	die "WEBWORK_ROOT not found in environment.\n"
 		unless exists $ENV{WEBWORK_ROOT};
+
+  $ENV{PG_ROOT} = "/www_data/webwork/pg";
+  die "PG_ROOT not found in environment.\n"
+    unless exists $ENV{PG_ROOT};
 }
 
 use lib "$ENV{WEBWORK_ROOT}/lib";
+use lib "$ENV{PG_ROOT}/lib";
 use WeBWorK::CourseEnvironment;
 
 # bring up a minimal course environment
