@@ -28,11 +28,25 @@ sub parse
 
 	my $data = $xml->XMLin($param);
 
+	# only one person in the course
 	if ($data->{'statusinfo'}{'codemajor'} ne 'Success')
 	{ # check status code
 		return error("Failed to retrieve roster.", "#e001");
 	}
-	foreach(@{$data->{'memberships'}{'member'}})
+
+	my @members = $data->{'memberships'}{'member'};
+
+	# xml parser creates different data structs if more than 1 member
+	if (ref($data->{'memberships'}{'member'}) eq 'ARRAY')
+	{
+		# Note that the explicit cast is necessary, otherwise it throws
+		# a bad index error in the foreach loop. The explicit cast is not
+		# necessary if we only have a single member in the course, hence
+		# we only cast if there are more than one members in the course.
+		@members = @{$data->{'memberships'}{'member'}};
+	}
+
+	foreach(@members)
 	{ # process members
 		if ($_->{'roles'} =~ /instructor/i)
 		{ # make note of the instructor for later
