@@ -6,6 +6,7 @@ use warnings;
 
 use XML::Simple;
 use WebworkBridge::Importer::Error;
+use Data::Dumper;
 
 ##### Exported Functions #####
 sub new
@@ -32,6 +33,7 @@ sub parse
 	{ # check status code
 		return error("Failed to retrieve roster.", "#e001");
 	}
+
 	foreach(@{$data->{'memberships'}{'member'}})
 	{ # process members
 		if ($_->{'roles'} =~ /instructor/i)

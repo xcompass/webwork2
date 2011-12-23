@@ -20,15 +20,10 @@ use CGI qw/:standard/;
 use WeBWorK::Debug;
 use WeBWorK::Authen::CWL::CWL;
 
-my $CWL_SERVER="https://www.auth.cwl.ubc.ca/auth/login";
-my $serviceURL="https://www.auth.cwl.ubc.ca/auth/rpc";
-my $serviceName = "webworks_psa";
-my $servicePassword = "m4th3mat1c5";
-
 sub get_credentials {
-	debug("get_credentials");
+    debug("get_credentials");
 	
-	my ($self) = @_;
+    my ($self) = @_;
     my $r = $self->{r};
     my $ce = $r->ce;
     my $db = $r->db;
@@ -38,7 +33,6 @@ sub get_credentials {
 	# if bypassCWL is submitted, using build-in authentication method.
 	$self->{external_auth} = 1;
 	if ( $r->param("bypassCWL") || ( $r->param("user") && ! $r->param("force_passwd_authen") ) ){
-#		 debug(" user=".$r->param("user")." force_passwd_authen=".$r->param("force_passwd_authen")."bypassCWL=" . $r->param("bypassCWL"));
 		if($r->param("bypassCWL")){
 			$self->{external_auth} = 0;
 		}
@@ -61,20 +55,20 @@ sub get_credentials {
                 $self->{login_type}    = "normal";
                 $self->{credential_source} = "params";
 				
-				return 1;
+		return 1;
             }
         } else {
             # if there's no ticket, redirect to get one
             #
             my $this_script = "https://"  . $ENV{'SERVER_NAME'} ;
-			if( $ENV{"SERVER_PORT"} != 80 && $ENV{"SERVER_PORT"} != 443 ) 
+			if( $ENV{"SERVER_PORT"} != 80 || $ENV{"SERVER_PORT"} != 443 ) 
 			{
 				$this_script = $this_script . ":" . $ENV{"SERVER_PORT"};
 			}
 			$this_script .=  $ENV{'REQUEST_URI'};
-			my $go_to = "$CWL_SERVER?serviceName=$serviceName&serviceURL=$this_script";
+			my $go_to = "$ce->{cwl}{cwl_server}?serviceName=$ce->{cwl}{service_name}&serviceURL=$this_script";
 			$self->{redirect} = $go_to;
-			debug($go_to);
+			debug("No CWL ticket, redirect to:".$go_to);
 
 			my $q = new CGI;
 			print $q->redirect($go_to);
@@ -97,9 +91,9 @@ sub check_cwl {
 	my $ce = $r->ce;
 	my $db = $r->db;
 	debug($ticket);
-	my $cwl = CWL->new(service => $serviceName,
-		password => $servicePassword,
-		url => $serviceURL,
+	my $cwl = CWL->new(service => $ce->{cwl}{service_name},
+		password => $ce->{cwl}{service_password},
+		url => $ce->{cwl}{service_url}, #$serviceURL,
 	);
 
 	my $session = $cwl->create_session($ticket);
@@ -140,8 +134,6 @@ sub check_cwl {
 			If you are experiencing any issues regarding access to WeBWorK, please contact the CTLT Support Team at 
 			<a href="mailto:webwork.support@ubc.ca">webwork.support@ubc.ca</a>.<br /><br />
 			<strong>You may logged in to the wrong course/section. Please make sure you clicked on the correct course and section link to login.</strong>);
-			#<p>To log in, please click on the CWL Login button below.<br /><br /><a href=").qq($CWL_SERVER?serviceName=$serviceName&serviceURL=).url(-path_info=>1).'?'.$ENV{'QUERY_STRING'}.q(">
-			#<img src="https://www.auth.cwl.ubc.ca/CWL_login_button.gif" width="76" height="25" alt="CWL Login" border="0"></a></p>);
 	}elsif( scalar @found > 1) {
 		foreach(@found){
 			if( $_->user_id eq $cwl_login_name ) {

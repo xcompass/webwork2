@@ -11,9 +11,13 @@ use warnings;
 BEGIN {
 	die "WEBWORK_ROOT not found in environment.\n"
 		unless exists $ENV{WEBWORK_ROOT};
+
+  die "PG_ROOT not found in environment.\n"
+    unless exists $ENV{PG_ROOT};
 }
 
 use lib "$ENV{WEBWORK_ROOT}/lib";
+use lib "$ENV{PG_ROOT}/lib";
 use WeBWorK::CourseEnvironment;
 use WeBWorK::DB;
 use WeBWorK::Utils qw(runtime_use readFile cryptPassword);

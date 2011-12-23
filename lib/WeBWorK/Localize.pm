@@ -1,8 +1,23 @@
+
+
+
 package WeBWorK::Localize;
 
-use Locale::Maketext 1.01;
-use base ('Locale::Maketext');
 
+use Locale::Maketext::Simple;  
+use base ("Locale::Maketext::Simple");
+
+print STDERR "Localize.pm: Full path for the localization directory set to |$WeBWorK::Constants::WEBWORK_DIRECTORY/lib/WeBWorK/Localize|\n";
+Locale::Maketext::Simple->import(Path => "$WeBWorK::Constants::WEBWORK_DIRECTORY/lib/WeBWorK/Localize");
+# use Locale::Maketext;
+# use base ('Locale::Maketext');
+
+sub getLoc {
+	my $lang = shift;
+	loc_lang($lang);
+	
+	return \&loc;
+}
 
 # this is like [quant] but it doesn't write the number
 #  usage: [quant,_1,<singular>,<plural>,<optional zero>]
@@ -61,7 +76,7 @@ in the fields below, and hit the \"Take Action!\" button at the bottom of the fo
 the page contains a table displaying the sets and several pieces of relevant information.",
 },
 "_CLASSLIST_EDITOR_DESCRIPTION" => q{
-This is the classlist editor page, where you can view and edit the records of all the students
+tr: This is the classlist editor page, where you can view and edit the records of all the students
 currently enrolled in this course.  The top of the page contains forms which allow you to filter
 which students to view, sort your students in a chosen order, edit student records, give new
 passwords to students, import/export student records from/to external files, or add/delete students.
@@ -70,20 +85,22 @@ the fields below, and hit the \"Take Action!\" button at the bottom of the form.
 page contains a table containing the student usernames and their information.
 },
 "_REDUCED_CREDIT_MESSAGE_1" => q{
-This assignment has a Reduced Credit Period that begins [_1] and
+tr: This assignment has a Reduced Credit Period that begins [_1] and
 ends on the due date, [_2].  During this period all additional work done counts [_3]\% of the
 original.
 },
 
 "_REDUCED_CREDIT_MESSAGE_2" => q{
-This assignment had a Reduced Credit Period that began [_1] and
+tr: This assignment had a Reduced Credit Period that began [_1] and
 ended on the due date, [_2].  During that period all additional work done counted [_3]\% of the
 original.
 },
-"_GUEST_LOGIN_MESSAGE" => q{This course supports guest logins. Click [_1] to log into this course as a guest.},
+"_GUEST_LOGIN_MESSAGE" => q{tr: This course supports guest logins. Click [_1] to log into this course as a guest.},
 
 "_EXTERNAL_AUTH_MESSAGE" => q{[_1] uses an external authentication system.  You've authenticated through that system, but aren't allowed to log in to this course.},
 
 	);
+package WeBWorK::Localize::I18N;
+use base(WeBWorK::Localize);
 
 1;

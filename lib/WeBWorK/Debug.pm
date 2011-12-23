@@ -56,8 +56,10 @@ If true, debugging messages will be output. If false, they will be ignored.
 
 =cut
 
-#our $Enabled = 0 unless defined $Enabled;
 our $Enabled = 1;
+our $Logfile = "/var/www/webworkdemo/webwork2/logs/debug.log";
+
+our $Enabled = 0 unless defined $Enabled;
 
 =item $Logfile
 
@@ -65,8 +67,7 @@ If non-empty, debugging output will be sent to the file named rather than STDERR
 
 =cut
 
-#our $Logfile = "" unless defined $Logfile;
-our $Logfile = "/home/john/webworkdev/webwork2/logs/debug.log";
+our $Logfile = "" unless defined $Logfile;
 
 =item $DenySubroutineOutput
 

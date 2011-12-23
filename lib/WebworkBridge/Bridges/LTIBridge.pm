@@ -17,6 +17,7 @@ use WebworkBridge::Importer::Error;
 use WebworkBridge::Parser;
 use WebworkBridge::Bridges::LTIParser;
 use WeBWorK::Authen::LTI;
+use Data::Dumper;
 
 # Constructor
 sub new 
@@ -148,7 +149,7 @@ sub createCourse
 	my $ret = $self->_getAndParseRoster(\%course, \@students);
 	if ($ret)
 	{
-		return error("Create course failed: $ret", "#e009");
+		return error("Get roster failed: $ret", "#e009");
 	}
 
 	$ret = $self->SUPER::createCourse(\%course, \@students);
@@ -169,13 +170,16 @@ sub updateCourse
 	my $ret = $self->_getAndParseRoster(\%course, \@students);
 	if ($ret)
 	{
-		return error("Update course failed: $ret", "#e009");
+		return error("Get roster failed: $ret", "#e009");
 	}
 
-	$ret = $self->SUPER::updateCourse(\%course, \@students);
-	if ($ret)
+	if (@students) 
 	{
-		return error("Update course failed: $ret", "#e010");
+		$ret = $self->SUPER::updateCourse(\%course, \@students);
+		if ($ret)
+		{
+			return error("Update course failed: $ret", "#e010");
+		}
 	}
 	return 0;
 }
@@ -198,7 +202,8 @@ sub _getAndParseRoster
 	my $r = $self->{r};
 	unless ($r->param("ext_ims_lis_memberships_url"))
 	{
-		return error("Server does not allow roster retrival.\n", "#e008");
+		debug("Server does not allow roster retrival.\n");
+		return 0;
 	}
 	
 	my $xml;
@@ -248,9 +253,18 @@ sub _getRoster
 			id => $r->param('ext_ims_lis_memberships_id'),
 		}
 	);
-
 	$request->sign;
-	my $res = $ua->request(POST $request->to_url);
+
+	# remove the params in URL from post body so that they will not be send twice
+	my @params = split('&', uri_unescape($request->to_post_body));
+	my $url = URI->new($request->request_url);
+	foreach my $k ($url->query_param) {
+		@params = grep {$_ ne $k.'='.$url->query_param($k)} @params;
+	}	
+
+	# have to generate the post parameters oursevles because of the way blti building block check the hash (membeships_id)
+	my %p = map { (split('=', $_, 2))[0] => (split('=', $_, 2))[1] } @params;
+	my $res = $ua->request((POST $request->request_url, \%p));
 	if ($res->is_success) 
 	{
 		$$xml = $res->content;

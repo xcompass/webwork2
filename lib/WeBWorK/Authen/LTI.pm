@@ -148,6 +148,7 @@ sub authenticate {
 	{ 
 		$self->{log_error} = "Failed OAuth verification";
 		$self->{error} = "Failed OAuth verification";
+debug("bb");
 		return 0;
 	}
 	debug("LTI OAuth Verification Successful");

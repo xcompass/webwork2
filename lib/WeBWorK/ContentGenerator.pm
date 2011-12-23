@@ -445,11 +445,6 @@ sub header {
 	my $self = shift;
 	my $r = $self->r;
 	
-	#added by compass. should be put into a subclass 
-	$r->headers_out->{"Pragma"} = "no-cache";
-	$r->headers_out->{"Cache-Control"} ="no-store, no-cache, must-revalidate, post-check=0, pre-check=0";
-	$r->headers_out->{"Expires"} ="Thu, 19 Nov 1981 08:52:00 GMT";
-
 	$r->content_type("text/html; charset=utf-8");
 	$r->send_http_header unless MP2;
 	return MP2 ? Apache2::Const::OK : Apache::Constants::OK;
@@ -659,11 +654,7 @@ sub links {
 	print CGI::h2($r->maketext("Main Menu"));
 	print CGI::start_ul();
 	print CGI::start_li(); # Courses
-	# added by compass
-	if(!defined $courseID or $authen->was_verified eq 0)
-	{
-		print &$makelink("${pfx}Home", text=>$r->maketext("Courses"), systemlink_args=>{authen=>0});
-	}
+        print &$makelink("${pfx}Home", text=>$r->maketext("Courses"), systemlink_args=>{authen=>0});
 	
 	if (defined $courseID) {
 		#print CGI::start_ul();
@@ -860,15 +851,16 @@ sub loginstatus {
 		
 		if ($eUserID eq $userID) {
 			# changed by Compass
-			print $r->maketext("Logged in as [_1]. ", $name) . CGI::br() . CGI::a({href=>$logoutURL}, $r->maketext("Log Out"));
+			print "Logged in as $name. " . CGI::br() . CGI::a({href=>$logoutURL}, "Log Out");
 			# end
 		} else {
 			# added and changed by compass
 			my $euser = $db->getUser($eUserID);
 			my $ename = $euser->first_name . " " . $euser->last_name; 
-			print $r->maketext("Logged in as [_1]. ", $name) . CGI::a({href=>$logoutURL}, $r->maketext("Log Out")) . CGI::br();
-			print $r->maketext("Acting as [_1]. ", $ename) . CGI::a({href=>$stopActingURL}, $r->maketext("Stop Acting"));
+			print "Logged in as $name. " . CGI::a({href=>$logoutURL}, "Log Out") . CGI::br();
+			print "Acting as $ename. " . CGI::a({href=>$stopActingURL}, "Stop Acting");
 			# end
+
 		}
 	} else {
 		print $r->maketext("Not logged in.");
@@ -940,13 +932,7 @@ sub path {
 	
 	my $urlpath = $r->urlpath;
 	do {
-		# added and changed by compass
-		if($urlpath->name eq "WeBWorK"){
-			unshift @path, $urlpath->name, ""; 
-		}else{
-			unshift @path, $urlpath->name, $r->location . $urlpath->path; 
-		}
-		# end
+		unshift @path, $urlpath->name, $r->location . $urlpath->path;
 	} while ($urlpath = $urlpath->parent);
 	
 	$path[$#path] = ""; # we don't want the last path element to be a link

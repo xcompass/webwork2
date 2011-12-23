@@ -2,9 +2,17 @@
 
 <p align="justify">
 
-Click on the "Orientation" link in the white area at the left.  This 
-will take you to the the first homework assignment, which will help 
-you to learn how to use WeBWorK effectively.
+If you haven't already done so, you should change your password to
+something other than your student ID.  To do this, click on the
+Password/Email link in the list at the far left, and follow the
+directions on that page.
+
+<p align="justify">
+
+Once you have changed your password, click on the "Orientation" link
+in the white area at the left.  This will take you to the the first
+homework assignment, which will help you to learn how to use WeBWorK
+effectively.
 
 <p align="justify">
 

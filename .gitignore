@@ -3,3 +3,7 @@
 httpd2.pid
 httpd.pid
 .svn/
+htdocs/tmp/
+conf/database.conf
+conf/webwork.apache2-config
+lib/WebworkBridge/classlists/
