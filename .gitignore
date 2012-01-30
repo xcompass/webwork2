@@ -1,0 +1,10 @@
+.svn
+*.swp
+*.log
+httpd2.pid
+httpd.pid
+htdocs/tmp/
+conf/database.conf
+conf/global.conf
+conf/webwork.apache2-config
+lib/WebworkBridge/classlists/
