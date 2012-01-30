@@ -139,16 +139,16 @@ sub body {
 	# us to yell at the user for doing that, since Authen isn't a content-
 	# generating module.
 	my $authen_error = MP2 ? $r->notes->get("authen_error") : $r->notes("authen_error");
-	if ($authen_error) {
-		print CGI::div({class=>"ResultsWithError"},
-			CGI::p($authen_error)
-		);
-	}
 
 	if ( $externalAuth ) {
 	    print CGI::p({}, $r->maketext("_EXTERNAL_AUTH_MESSAGE", CGI::strong($r->maketext($course))));
 
 	} else {
+		if ($authen_error) {
+			print CGI::div({class=>"ResultsWithError"},
+					CGI::p($authen_error)
+				      );
+		}
 		print CGI::p($r->maketext("Please enter your username and password for [_1] below:", CGI::b($r->maketext($course))));
 		print CGI::p($r->maketext("_LOGIN_MESSAGE", CGI::b($r->maketext("Remember Me"))));
 	

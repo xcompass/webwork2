@@ -1516,9 +1516,9 @@ sub fieldEditHTML {
 		return CGI::popup_menu({
 			-name => $fieldName,
 			-values => \@values,
-			 -default => [$default], # force default of 0 to be a selector value (instead of 
+			#-default => [$default], # force default of 0 to be a selector value (instead of 
 			                        # being considered as a null -- now works with CGI 3.42
-			#-default => $default,   # works with CGI 3.49 (but the above does not, go figure
+			-default => $default,   # works with CGI 3.49 (but the above does not, go figure
 			-labels => \%labels,
 			-override => 1,    # force default value to be selected. (corrects bug on newer CGI
 		});

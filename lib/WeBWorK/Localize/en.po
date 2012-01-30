@@ -30,7 +30,7 @@ msgstr " This is the homework sets editor page where you can view and edit the h
 
 #
 msgid "_EXTERNAL_AUTH_MESSAGE"
-msgstr "%1 uses an external authentication system.  You've authenticated through that system, but aren't allowed to log in to this course."
+msgstr "<font color=\"red\">Access Denied</font>. You have successfully logged in to %1 but you do not have access to this course. <br /><br /> If you are experiencing any issues regarding WeBWorK, please contact webwork.support@ubc.ca. Or click on \"Courses\" link on the left to login to another course."
 
 #
 msgid "navProbList"

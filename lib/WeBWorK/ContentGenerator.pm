@@ -830,6 +830,9 @@ sub loginstatus {
 	my $r = $self->r;
 	my $authen = $r->authen;
 	my $urlpath = $r->urlpath;
+	# added by compass
+	my $db = $r->db;
+	# end
 	
 	if ($authen and $authen->was_verified) {
 		my $courseID = $urlpath->arg("courseID");
@@ -840,15 +843,27 @@ sub loginstatus {
 			params => { effectiveUser => $userID },
 		);
 		my $logoutURL = $self->systemLink($urlpath->newFromModule(__PACKAGE__ . "::Logout", $r, courseID => $courseID));
+
+		# added by compass
+		my $user = $db->getUser ($userID);
+        	my $name = $user->first_name . " " . $user->last_name;
+        	# end
 		
 		if ($eUserID eq $userID) {
-			print $r->maketext("Logged in as [_1]. ", $userID) . CGI::br() . CGI::a({href=>$logoutURL}, $r->maketext("Log Out"));
+			# changed by Compass
+			print $r->maketext("Logged in as [_1]. ", $name) . CGI::br() . CGI::a({href=>$logoutURL}, $r->maketext("Log Out"));
+			# end
 		} else {
-			print $r->maketext("Logged in as [_1]. ", $userID) . CGI::a({href=>$logoutURL}, $r->maketext("Log Out")) . CGI::br();
-			print $r->maketext("Acting as [_1]. ", $eUserID) . CGI::a({href=>$stopActingURL}, $r->maketext("Stop Acting"));
+			# added and changed by compass
+			my $euser = $db->getUser($eUserID);
+			my $ename = $euser->first_name . " " . $euser->last_name; 
+			print $r->maketext("Logged in as [_1]. ", $name) . CGI::a({href=>$logoutURL}, $r->maketext("Log Out")) . CGI::br();
+			print $r->maketext("Acting as [_1]. ", $ename) . CGI::a({href=>$stopActingURL}, $r->maketext("Stop Acting"));
+			# end
 		}
 	} else {
-		print $r->maketext("Not logged in.");
+		# commented by Compass
+		#print $r->maketext("Not logged in.");
 	}
 	
 	return "";
