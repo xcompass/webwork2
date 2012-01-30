@@ -55,6 +55,8 @@ use WeBWorK::URLPath;
 use WeBWorK::CGI;
 use WeBWorK::Utils qw(runtime_use writeTimingLogEntry);
 
+use WebworkBridge::BridgeManager;
+
 use mod_perl;
 use constant MP2 => ( exists $ENV{MOD_PERL_API_VERSION} and $ENV{MOD_PERL_API_VERSION} >= 2 );
 
@@ -284,8 +286,28 @@ sub dispatch($) {
 	#	$proctor_authen_module = $ce->{authen}{proctor_module};
 	#}
 	
-	my $user_authen_module = WeBWorK::Authen::class($ce, "user_module");
-	
+	my $user_authen_module;
+
+	my $bridge = WebworkBridge::BridgeManager->new($r);
+	my $retstatus = $bridge->run();
+	if ($bridge->useAuthenModule())
+	{
+		$user_authen_module = $bridge->getAuthenModule();
+	}
+	if ($bridge->useDisplayModule())
+	{
+		if ($retstatus)
+		{
+			MP2 ? $r->notes->set(import_error => $retstatus) : $r->notes('import_error' => $retstatus);
+		}
+		$displayModule = $bridge->getDisplayModule();
+	}
+
+	if (!defined($user_authen_module))
+	{
+		$user_authen_module = WeBWorK::Authen::class($ce, "user_module");
+	}
+
 	runtime_use $user_authen_module;
 	my $authen = $user_authen_module->new($r);
 	debug("Using user_authen_module $user_authen_module: $authen\n");
