@@ -8,3 +8,8 @@ conf/database.conf
 conf/global.conf
 conf/webwork.apache2-config
 lib/WebworkBridge/classlists/
+.DS_Store
+*.save
+htdocs/tmp/*
+tmp/*
+logs/*
